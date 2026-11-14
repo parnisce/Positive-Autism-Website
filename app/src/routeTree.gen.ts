@@ -20,6 +20,7 @@ import { Route as UserDataManagementRouteImport } from './routes/user-data-manag
 import { Route as ApiCheckoutRouteImport } from './routes/api.checkout'
 import { Route as ApiCheckoutStatusRouteImport } from './routes/api.checkout-status'
 import { Route as ShopSuccessRouteImport } from './routes/shop_.success'
+import { Route as ShopEbookSlugRouteImport } from './routes/shop_.ebook.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -76,6 +77,11 @@ const ShopSuccessRoute = ShopSuccessRouteImport.update({
   path: '/shop/success',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShopEbookSlugRoute = ShopEbookSlugRouteImport.update({
+  id: '/shop_/ebook/$slug',
+  path: '/shop/ebook/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/checkout-status': typeof ApiCheckoutStatusRoute
   '/shop/success': typeof ShopSuccessRoute
+  '/shop/ebook/$slug': typeof ShopEbookSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/checkout-status': typeof ApiCheckoutStatusRoute
   '/shop/success': typeof ShopSuccessRoute
+  '/shop/ebook/$slug': typeof ShopEbookSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/checkout-status': typeof ApiCheckoutStatusRoute
   '/shop_/success': typeof ShopSuccessRoute
+  '/shop_/ebook/$slug': typeof ShopEbookSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/api/checkout'
     | '/api/checkout-status'
     | '/shop/success'
+    | '/shop/ebook/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/api/checkout'
     | '/api/checkout-status'
     | '/shop/success'
+    | '/shop/ebook/$slug'
   id:
     | '__root__'
     | '/'
@@ -157,6 +168,7 @@ export interface FileRouteTypes {
     | '/api/checkout'
     | '/api/checkout-status'
     | '/shop_/success'
+    | '/shop_/ebook/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -171,6 +183,7 @@ export interface RootRouteChildren {
   ApiCheckoutRoute: typeof ApiCheckoutRoute
   ApiCheckoutStatusRoute: typeof ApiCheckoutStatusRoute
   ShopSuccessRoute: typeof ShopSuccessRoute
+  ShopEbookSlugRoute: typeof ShopEbookSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -252,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopSuccessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shop_/ebook/$slug': {
+      id: '/shop_/ebook/$slug'
+      path: '/shop/ebook/$slug'
+      fullPath: '/shop/ebook/$slug'
+      preLoaderRoute: typeof ShopEbookSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -267,6 +287,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCheckoutRoute: ApiCheckoutRoute,
   ApiCheckoutStatusRoute: ApiCheckoutStatusRoute,
   ShopSuccessRoute: ShopSuccessRoute,
+  ShopEbookSlugRoute: ShopEbookSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

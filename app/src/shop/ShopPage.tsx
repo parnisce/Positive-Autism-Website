@@ -1,182 +1,395 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { gsap } from "gsap";
+import { Flip } from "gsap/Flip";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
 import { PrefsProvider, usePrefs } from "../components/pa/prefs";
 import { SiteFooter, SiteHeader } from "../components/pa/SiteChrome";
+import { scrollToEl, useScrolledHeader, useSmoothScroll } from "../components/pa/useSmoothScroll";
 import "./shop.css";
-import { CartProvider, useCart } from "./cart";
-import { CATEGORIES, PRODUCTS, categoryName, formatPrice, getProduct, type Product } from "./catalog";
-import { SHOP_COPY } from "./strings";
+import { CartProvider } from "./cart";
+import { CartDrawer, CartFab } from "./CartUI";
+import { CATEGORIES, PRODUCTS, categoryName, formatPrice, tintFor, type Product } from "./catalog";
+import { ProductCard } from "./ProductCard";
+import { useShopCopy } from "./useShopCopy";
+
+gsap.registerPlugin(ScrollTrigger, Flip, useGSAP);
 
 const PAGE_SIZE = 24;
 type Sort = "newest" | "low" | "high" | "az";
 
-export const useShopCopy = () => SHOP_COPY[usePrefs().lang];
+/** One cover from each of the biggest topics, so the hero shows variety. */
+const heroCovers = () => {
+  const seen = new Set<number>();
+  const out: string[] = [];
+  for (const c of CATEGORIES) {
+    const p = PRODUCTS.find((x) => x.cats.includes(c.slug) && !seen.has(x.id));
+    if (p) {
+      seen.add(p.id);
+      out.push(p.img);
+    }
+    if (out.length === 9) break;
+  }
+  return out;
+};
+/** A different cover for each topic tile (the first ebook of that topic not already used by an earlier tile). */
+const TOPIC_COVERS = (() => {
+  const used = new Set<number>();
+  const map = new Map<string, string>();
+  for (const c of CATEGORIES) {
+    const list = PRODUCTS.filter((p) => p.cats.includes(c.slug));
+    const pick = list.find((p) => !used.has(p.id)) ?? list[0];
+    if (pick) {
+      used.add(pick.id);
+      map.set(c.slug, pick.img);
+    }
+  }
+  return map;
+})();
+const topicCover = (slug: string) => TOPIC_COVERS.get(slug);
 
-/* ------------------------------------------------------------------ cart */
+/* ------------------------------------------------------------------ hero */
 
-export function CartFab() {
+function ShopHero({ q, setQ, onSearch, onTopic }: { q: string; setQ: (v: string) => void; onSearch: () => void; onTopic: (slug: string) => void }) {
   const s = useShopCopy();
-  const { ids, setOpen } = useCart();
-  return (
-    <button type="button" className="pa-cart-fab" onClick={() => setOpen(true)} aria-label={`${s.cartOpen}. ${s.cartCount.replace("{n}", String(ids.length))}`}>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <circle cx="9" cy="20" r="1.4" />
-        <circle cx="18" cy="20" r="1.4" />
-        <path d="M2 3h3l2.4 11.2a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.5L21 7H6" />
-      </svg>
-      <span>{s.cart}</span>
-      {ids.length > 0 && <b>{ids.length}</b>}
-    </button>
-  );
-}
-
-export function CartDrawer() {
-  const s = useShopCopy();
-  const { lang } = usePrefs();
-  const { ids, remove, open, setOpen } = useCart();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  const items = ids.map((id) => getProduct(id)).filter((p): p is Product => !!p);
-  const total = items.reduce((sum, p) => sum + p.price, 0);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, setOpen]);
-
-  async function checkout() {
-    setBusy(true);
-    setError("");
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ids: items.map((p) => p.id), lang }),
-      });
-      const data = (await res.json().catch(() => ({}))) as { url?: string; code?: string };
-      if (res.ok && data.url) {
-        window.location.href = data.url;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let dispose: (() => void) | undefined;
+    let trigger: ScrollTrigger | undefined;
+    let cancelled = false;
+    import("./ShopScene").then(({ mountShopScene }) => {
+      if (cancelled) return;
+      const scene = mountShopScene(canvas, heroCovers(), reduce);
+      if (!scene) {
+        canvas.style.display = "none";
         return;
       }
-      setError(data.code === "not_configured" ? s.notConfigured : s.error);
-    } catch {
-      setError(s.error);
-    }
-    setBusy(false);
-  }
+      dispose = scene.dispose;
+      if (!reduce) {
+        trigger = ScrollTrigger.create({
+          trigger: canvas.parentElement,
+          start: "top top",
+          end: "bottom top",
+          scrub: 0.6,
+          onUpdate: (self) => (scene.state.scroll = self.progress),
+        });
+      }
+    });
+    return () => {
+      cancelled = true;
+      trigger?.kill();
+      dispose?.();
+    };
+  }, []);
 
   return (
-    <div className={`pa-drawer${open ? " is-open" : ""}`} aria-hidden={!open}>
-      <button type="button" className="pa-drawer-scrim" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1} aria-label={s.cartClose} />
-      <aside className="pa-drawer-panel" role="dialog" aria-modal="true" aria-label={s.cart}>
-        <header>
-          <h2>{s.cart}</h2>
-          <button type="button" onClick={() => setOpen(false)} aria-label={s.cartClose} tabIndex={open ? 0 : -1}>
-            ×
-          </button>
-        </header>
-        {items.length === 0 ? (
-          <p className="pa-drawer-empty">{s.cartEmpty}</p>
-        ) : (
-          <ul className="pa-drawer-list">
-            {items.map((p) => (
-              <li key={p.id}>
-                <img src={p.img} alt="" width={64} height={64} />
-                <div>
-                  <strong>{p.title}</strong>
-                  <span>{formatPrice(p.price, lang, s.free)}</span>
-                </div>
-                <button type="button" onClick={() => remove(p.id)} tabIndex={open ? 0 : -1}>
-                  {s.remove}
-                </button>
-              </li>
+    <section className="pa-s-hero" id="shop-top">
+      <canvas ref={canvasRef} className="pa-s-scene" aria-hidden="true" />
+      <div className="pa-wrap pa-s-hero-in">
+        <div className="pa-s-hero-copy">
+          <p className="pa-eyebrow pa-s-fade">{s.eyebrow}</p>
+          <h1 className="pa-s-fade">{s.heroTitle}</h1>
+          <p className="pa-lead pa-s-fade">{s.heroSub}</p>
+          <form
+            className="pa-s-herosearch pa-s-fade"
+            onSubmit={(e) => {
+              e.preventDefault();
+              onSearch();
+            }}
+          >
+            <label>
+              <span className="pa-sr">{s.searchLabel}</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
+              </svg>
+              <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={s.heroSearch} autoComplete="off" />
+            </label>
+            <button type="submit">{s.heroGo}</button>
+          </form>
+          <div className="pa-s-popular pa-s-fade">
+            <span>{s.popular}</span>
+            {CATEGORIES.slice(0, 4).map((c) => (
+              <button key={c.slug} type="button" onClick={() => onTopic(c.slug)}>
+                {c.name}
+              </button>
             ))}
-          </ul>
-        )}
-        <footer>
-          <p className="pa-drawer-total">
-            <span>{s.subtotal}</span>
-            <strong>{formatPrice(total, lang, s.free)}</strong>
+          </div>
+          <p className="pa-s-stats pa-s-fade">
+            <b>{PRODUCTS.length}</b> {s.statEbooks} <i>·</i> <b>{CATEGORIES.length}</b> {s.statTopics}
           </p>
-          <button type="button" className="pa-drawer-pay" disabled={busy || items.length === 0 || total <= 0} onClick={checkout} tabIndex={open ? 0 : -1}>
-            {busy ? s.redirecting : s.checkout}
-          </button>
-          <p className="pa-drawer-note" role="status">
-            {error || s.secure}
-          </p>
-        </footer>
-      </aside>
-    </div>
+        </div>
+      </div>
+      <a className="pa-s-scrollcue pa-s-fade" href="#browse">
+        <span>{s.scroll}</span>
+        <i aria-hidden="true" />
+      </a>
+    </section>
   );
 }
 
-/* ------------------------------------------------------------------ catalogue */
+/* ------------------------------------------------------------------ topics */
 
-function ProductCard({ p }: { p: Product }) {
+function Topics({ active, onTopic }: { active: string[]; onTopic: (slug: string) => void }) {
   const s = useShopCopy();
-  const { lang } = usePrefs();
-  const { has, add, remove, setOpen } = useCart();
-  const inCart = has(p.id);
-  const free = p.price <= 0;
+  const strip = useRef<HTMLDivElement>(null);
+  const go = (dir: number) => strip.current?.scrollBy({ left: dir * 340, behavior: "smooth" });
   return (
-    <article className="pa-prod">
-      <div className="pa-prod-img">
-        <img src={p.img} alt={p.title} width={300} height={300} loading="lazy" />
-        <span className={`pa-prod-price${free ? " is-free" : ""}`}>{formatPrice(p.price, lang, s.free)}</span>
-      </div>
-      <div className="pa-prod-body">
-        <ul className="pa-prod-cats">
-          {p.cats.slice(0, 2).map((c) => (
-            <li key={c}>{categoryName(c)}</li>
-          ))}
-        </ul>
-        <h3>{p.title}</h3>
-        {p.subtitle && <p className="pa-prod-sub">{p.subtitle}</p>}
-        <details>
-          <summary>{s.details}</summary>
-          <p>{p.desc}</p>
-        </details>
-        {free ? (
-          <a className="pa-prod-btn" href="#stay-connected">
-            {s.getFree}
-          </a>
-        ) : inCart ? (
-          <div className="pa-prod-actions">
-            <button type="button" className="pa-prod-btn is-added" onClick={() => setOpen(true)}>
-              ✓ {s.added}
+    <section className="pa-s-topics">
+      <div className="pa-wrap">
+        <div className="pa-s-head">
+          <div>
+            <h2 className="pa-h2">{s.topicsTitle}</h2>
+            <p className="pa-sub">{s.topicsSub}</p>
+          </div>
+          <div className="pa-s-arrows">
+            <button type="button" onClick={() => go(-1)} aria-label={s.prev}>
+              ←
             </button>
-            <button type="button" className="pa-prod-link" onClick={() => remove(p.id)}>
-              {s.remove}
+            <button type="button" onClick={() => go(1)} aria-label={s.next}>
+              →
             </button>
           </div>
-        ) : (
-          <button type="button" className="pa-prod-btn" onClick={() => add(p.id)}>
-            {s.add}
-          </button>
-        )}
+        </div>
       </div>
-    </article>
+      <div className="pa-s-strip" ref={strip}>
+        {CATEGORIES.map((c, i) => (
+          <button
+            key={c.slug}
+            type="button"
+            className={`pa-s-topic${active.includes(c.slug) ? " is-on" : ""}`}
+            style={{ "--tint": tintFor(c.slug) } as React.CSSProperties}
+            onClick={() => onTopic(c.slug)}
+          >
+            {topicCover(c.slug) && <img src={topicCover(c.slug)} alt="" loading="lazy" width={300} height={300} />}
+            <span className="pa-s-topic-n">{String(i + 1).padStart(2, "0")}</span>
+            <strong>{c.name}</strong>
+            <em>{c.count === 1 ? s.topicOne : s.topicEbooks.replace("{n}", String(c.count))}</em>
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 
-function Shop({ initialQ, cancelled }: { initialQ: string; cancelled: boolean }) {
+/* ------------------------------------------------------------------ browse */
+
+function Browse({ q, setQ, cats, setCats, min, setMin, max, setMax, sort, setSort, visible, setVisible, results, mutate, gridRef }: {
+  q: string;
+  setQ: (v: string) => void;
+  cats: string[];
+  setCats: React.Dispatch<React.SetStateAction<string[]>>;
+  min: string;
+  setMin: (v: string) => void;
+  max: string;
+  setMax: (v: string) => void;
+  sort: Sort;
+  setSort: (v: Sort) => void;
+  visible: number;
+  setVisible: React.Dispatch<React.SetStateAction<number>>;
+  results: Product[];
+  mutate: (fn: () => void) => void;
+  gridRef: React.RefObject<HTMLDivElement | null>;
+}) {
   const s = useShopCopy();
   const { lang } = usePrefs();
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const hasFilters = !!(q || cats.length || min || max);
+  const filterCount = cats.length + (min || max ? 1 : 0);
+  const toggleCat = (slug: string) => mutate(() => setCats((cur) => (cur.includes(slug) ? cur.filter((c) => c !== slug) : [...cur, slug])));
+  const reset = () =>
+    mutate(() => {
+      setQ("");
+      setCats([]);
+      setMin("");
+      setMax("");
+    });
+  const setPrice = (lo: string, hi: string) =>
+    mutate(() => {
+      setMin(lo);
+      setMax(hi);
+    });
+  const chip = (label: string, lo: string, hi: string) => (
+    <button type="button" className={`pa-chip${min === lo && max === hi ? " is-on" : ""}`} onClick={() => setPrice(lo, hi)}>
+      {label}
+    </button>
+  );
+
+  return (
+    <section className="pa-s-shop" id="shop-grid">
+      <div className="pa-wrap">
+        <div className="pa-s-bar">
+          <label className="pa-s-search">
+            <span className="pa-sr">{s.searchLabel}</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            <input type="search" value={q} onChange={(e) => mutate(() => setQ(e.target.value))} placeholder={s.searchPlaceholder} autoComplete="off" />
+          </label>
+          <label className="pa-s-sort">
+            <span>{s.sortLabel}</span>
+            <select value={sort} onChange={(e) => mutate(() => setSort(e.target.value as Sort))}>
+              {(Object.keys(s.sorts) as Sort[]).map((k) => (
+                <option key={k} value={k}>
+                  {s.sorts[k]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button type="button" className="pa-s-filter-toggle" aria-expanded={filtersOpen} onClick={() => setFiltersOpen((v) => !v)}>
+            {s.filters}
+            {filterCount > 0 && <b>{filterCount}</b>}
+          </button>
+        </div>
+
+        <div className="pa-s-layout">
+          <aside className={`pa-s-filters${filtersOpen ? " is-open" : ""}`} data-lenis-prevent>
+            <section>
+              <h2>{s.categories}</h2>
+              <ul>
+                {CATEGORIES.map((c) => (
+                  <li key={c.slug}>
+                    <label>
+                      <input type="checkbox" checked={cats.includes(c.slug)} onChange={() => toggleCat(c.slug)} />
+                      <i style={{ background: tintFor(c.slug) }} aria-hidden="true" />
+                      <span>{c.name}</span>
+                      <em>{c.count}</em>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </section>
+            <section>
+              <h2>{s.price}</h2>
+              <div className="pa-chips">
+                {chip(s.priceAll, "", "")}
+                {chip(s.priceFree, "0", "0")}
+                {chip(`${s.priceUpTo} ${formatPrice(500, lang, s.free)}`, "", "5")}
+              </div>
+              <div className="pa-price-range">
+                <label>
+                  <span>{s.min}</span>
+                  <input type="number" inputMode="decimal" min={0} step={0.5} value={min} onChange={(e) => mutate(() => setMin(e.target.value))} placeholder="0" />
+                </label>
+                <label>
+                  <span>{s.max}</span>
+                  <input type="number" inputMode="decimal" min={0} step={0.5} value={max} onChange={(e) => mutate(() => setMax(e.target.value))} placeholder="10" />
+                </label>
+              </div>
+            </section>
+          </aside>
+
+          <div className="pa-s-results" aria-live="polite">
+            <div className="pa-s-meta">
+              <p>{s.showing.replace("{n}", String(Math.min(visible, results.length))).replace("{total}", String(results.length))}</p>
+              {hasFilters && (
+                <div className="pa-s-pills" aria-label={s.activeFilters}>
+                  {q && (
+                    <button type="button" onClick={() => mutate(() => setQ(""))}>
+                      “{q}” ×
+                    </button>
+                  )}
+                  {cats.map((c) => (
+                    <button key={c} type="button" onClick={() => toggleCat(c)}>
+                      {categoryName(c)} ×
+                    </button>
+                  ))}
+                  {(min || max) && (
+                    <button type="button" onClick={() => setPrice("", "")}>
+                      {min || "0"}–{max || "∞"} ×
+                    </button>
+                  )}
+                  <button type="button" className="pa-s-clear" onClick={reset}>
+                    {s.reset}
+                  </button>
+                </div>
+              )}
+            </div>
+            {results.length === 0 ? (
+              <div className="pa-s-none">
+                <strong>{s.none}</strong>
+                <p>{s.noneHint}</p>
+                <button type="button" className="pa-s-btn" onClick={reset}>
+                  {s.reset}
+                </button>
+              </div>
+            ) : (
+              <div className="pa-s-grid" ref={gridRef}>
+                {results.slice(0, visible).map((p) => (
+                  <ProductCard key={p.id} p={p} />
+                ))}
+              </div>
+            )}
+            {visible < results.length && (
+              <button type="button" className="pa-s-more-btn" onClick={() => mutate(() => setVisible((v) => v + PAGE_SIZE))}>
+                {s.more}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HowItWorks() {
+  const s = useShopCopy();
+  return (
+    <section className="pa-s-how">
+      <div className="pa-wrap">
+        <h2 className="pa-h2">{s.howTitle}</h2>
+        <ol className="pa-s-steps">
+          {s.steps.map((st, i) => (
+            <li key={st.t} style={{ "--tint": `var(--pa-tint-${[1, 3, 4][i]})` } as React.CSSProperties}>
+              <span>{String(i + 1).padStart(2, "0")}</span>
+              <h3>{st.t}</h3>
+              <p>{st.d}</p>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ page */
+
+function Shop({ initialQ, initialCat, cancelled }: { initialQ: string; initialCat: string; cancelled: boolean }) {
+  const s = useShopCopy();
+  const rootRef = useRef<HTMLDivElement>(null);
+  useSmoothScroll();
+  useScrolledHeader(rootRef);
+
   const [q, setQ] = useState(initialQ);
-  const [cats, setCats] = useState<string[]>([]);
+  const [cats, setCats] = useState<string[]>(initialCat && CATEGORIES.some((c) => c.slug === initialCat) ? [initialCat] : []);
   const [min, setMin] = useState("");
   const [max, setMax] = useState("");
   const [sort, setSort] = useState<Sort>("newest");
   const [visible, setVisible] = useState(PAGE_SIZE);
-  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const gridRef = useRef<HTMLDivElement>(null);
+  const flipState = useRef<ReturnType<typeof Flip.getState> | null>(null);
+  const reduced = useRef(false);
+  useEffect(() => {
+    reduced.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }, []);
+
+  /** Capture card positions before a change, so the grid can glide to its new layout afterwards. */
+  const mutate = (fn: () => void) => {
+    if (!reduced.current && gridRef.current) flipState.current = Flip.getState(gridRef.current.querySelectorAll("[data-flip-id]"));
+    fn();
+  };
 
   const haystack = useMemo(
     () => new Map(PRODUCTS.map((p) => [p.id, `${p.title} ${p.subtitle} ${p.desc} ${p.cats.map(categoryName).join(" ")}`.toLowerCase()])),
     [],
   );
-
   const results = useMemo(() => {
     const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
     const lo = min === "" ? 0 : Math.round(parseFloat(min) * 100);
@@ -198,138 +411,80 @@ function Shop({ initialQ, cancelled }: { initialQ: string; cancelled: boolean })
 
   useEffect(() => setVisible(PAGE_SIZE), [q, cats, min, max, sort]);
 
-  const toggleCat = (slug: string) => setCats((cur) => (cur.includes(slug) ? cur.filter((c) => c !== slug) : [...cur, slug]));
-  const hasFilters = !!(q || cats.length || min || max);
-  const reset = () => {
-    setQ("");
-    setCats([]);
-    setMin("");
-    setMax("");
-  };
-  const setPrice = (lo: string, hi: string) => {
-    setMin(lo);
-    setMax(hi);
-  };
-  const priceChip = (label: string, lo: string, hi: string) => (
-    <button type="button" className={`pa-chip${min === lo && max === hi ? " is-on" : ""}`} onClick={() => setPrice(lo, hi)}>
-      {label}
-    </button>
+  useLayoutEffect(() => {
+    const state = flipState.current;
+    if (!state) return;
+    flipState.current = null;
+    Flip.from(state, {
+      duration: 0.6,
+      ease: "power3.inOut",
+      absolute: true,
+      onEnter: (els) => gsap.fromTo(els, { autoAlpha: 0, scale: 0.8 }, { autoAlpha: 1, scale: 1, duration: 0.45, delay: 0.15, stagger: 0.025 }),
+    });
+  }, [results, visible]);
+
+  // hero builds in, then dims as the shop slides over it
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.from(".pa-header-in > *", { autoAlpha: 0, duration: 0.7, stagger: 0.07, ease: "power3.out" });
+        gsap.from(".pa-s-fade", { autoAlpha: 0, scale: 0.96, duration: 0.9, stagger: 0.1, ease: "power3.out", delay: 0.15 });
+        gsap.fromTo(".pa-s-hero", { "--cover": 0 }, { "--cover": 0.6, ease: "none", scrollTrigger: { trigger: ".pa-s-main", start: "top bottom", end: "top top", scrub: true } });
+      });
+      return () => mm.revert();
+    },
+    { scope: rootRef },
   );
 
+  const toGrid = () => window.setTimeout(() => scrollToEl(document.getElementById("shop-grid"), -150), 60);
+  const onTopic = (slug: string) => {
+    mutate(() => setCats((cur) => (cur.length === 1 && cur[0] === slug ? [] : [slug])));
+    toGrid();
+  };
+
   return (
-    <main id="main" className="pa-shop">
-      <div className="pa-wrap">
-        <header className="pa-shop-head">
-          <h1>{s.title}</h1>
-          <p>{s.intro}</p>
-        </header>
-        {cancelled && <p className="pa-shop-note">{s.cancelled}</p>}
-
-        <div className="pa-shop-bar">
-          <label className="pa-search">
-            <span className="pa-sr">{s.searchLabel}</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </svg>
-            <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={s.searchPlaceholder} autoComplete="off" />
-          </label>
-          <label className="pa-sort">
-            <span>{s.sortLabel}</span>
-            <select value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
-              {(Object.keys(s.sorts) as Sort[]).map((k) => (
-                <option key={k} value={k}>
-                  {s.sorts[k]}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button type="button" className="pa-filter-toggle" aria-expanded={filtersOpen} onClick={() => setFiltersOpen((v) => !v)}>
-            {s.filters}
-            {cats.length + (min || max ? 1 : 0) > 0 && <b>{cats.length + (min || max ? 1 : 0)}</b>}
-          </button>
+    <div className="pa-root pa-page pa-shop-root" ref={rootRef}>
+      <SiteHeader />
+      <main id="main">
+        <div className="pa-s-stage">
+          <ShopHero q={q} setQ={(v) => mutate(() => setQ(v))} onSearch={toGrid} onTopic={onTopic} />
+          <div className="pa-s-main" id="browse">
+            {cancelled && <p className="pa-shop-note pa-s-note">{s.cancelled}</p>}
+            <Topics active={cats} onTopic={onTopic} />
+            <Browse
+              q={q}
+              setQ={setQ}
+              cats={cats}
+              setCats={setCats}
+              min={min}
+              setMin={setMin}
+              max={max}
+              setMax={setMax}
+              sort={sort}
+              setSort={setSort}
+              visible={visible}
+              setVisible={setVisible}
+              results={results}
+              mutate={mutate}
+              gridRef={gridRef}
+            />
+            <HowItWorks />
+          </div>
         </div>
-
-        <div className="pa-shop-layout">
-          <aside className={`pa-filters${filtersOpen ? " is-open" : ""}`}>
-            <section>
-              <h2>{s.categories}</h2>
-              <ul>
-                {CATEGORIES.map((c) => (
-                  <li key={c.slug}>
-                    <label>
-                      <input type="checkbox" checked={cats.includes(c.slug)} onChange={() => toggleCat(c.slug)} />
-                      <span>{c.name}</span>
-                      <em>{c.count}</em>
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            </section>
-            <section>
-              <h2>{s.price}</h2>
-              <div className="pa-chips">
-                {priceChip(s.priceAll, "", "")}
-                {priceChip(s.priceFree, "0", "0")}
-                {priceChip(`${s.priceUpTo} ${formatPrice(500, lang, s.free)}`, "", "5")}
-              </div>
-              <div className="pa-price-range">
-                <label>
-                  <span>{s.min}</span>
-                  <input type="number" inputMode="decimal" min={0} step={0.5} value={min} onChange={(e) => setMin(e.target.value)} placeholder="0" />
-                </label>
-                <label>
-                  <span>{s.max}</span>
-                  <input type="number" inputMode="decimal" min={0} step={0.5} value={max} onChange={(e) => setMax(e.target.value)} placeholder="10" />
-                </label>
-              </div>
-            </section>
-            {hasFilters && (
-              <button type="button" className="pa-reset" onClick={reset}>
-                {s.reset}
-              </button>
-            )}
-          </aside>
-
-          <section className="pa-results" aria-live="polite">
-            <p className="pa-count">{s.showing.replace("{n}", String(Math.min(visible, results.length))).replace("{total}", String(results.length))}</p>
-            {results.length === 0 ? (
-              <div className="pa-none">
-                <p>{s.none}</p>
-                <button type="button" className="pa-reset" onClick={reset}>
-                  {s.reset}
-                </button>
-              </div>
-            ) : (
-              <div className="pa-prod-grid">
-                {results.slice(0, visible).map((p) => (
-                  <ProductCard key={p.id} p={p} />
-                ))}
-              </div>
-            )}
-            {visible < results.length && (
-              <button type="button" className="pa-more-btn" onClick={() => setVisible((v) => v + PAGE_SIZE)}>
-                {s.more}
-              </button>
-            )}
-          </section>
-        </div>
-      </div>
-    </main>
+      </main>
+      <SiteFooter />
+      <CartFab />
+      <CartDrawer />
+    </div>
   );
 }
 
-export function ShopPage({ initialQ = "", cancelled = false }: { initialQ?: string; cancelled?: boolean }) {
+export function ShopPage({ initialQ = "", initialCat = "", cancelled = false }: { initialQ?: string; initialCat?: string; cancelled?: boolean }) {
   return (
     <PrefsProvider>
       <CartProvider>
-        <div className="pa-root pa-scrolled pa-page">
-          <SiteHeader />
-          <Shop initialQ={initialQ} cancelled={cancelled} />
-          <SiteFooter />
-          <CartFab />
-          <CartDrawer />
-        </div>
+        <Shop initialQ={initialQ} initialCat={initialCat} cancelled={cancelled} />
       </CartProvider>
     </PrefsProvider>
   );

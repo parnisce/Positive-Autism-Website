@@ -5,10 +5,11 @@ import { THEME_BOOT } from "../theme-boot";
 import { ShopPage } from "../shop/ShopPage";
 
 export const Route = createFileRoute("/shop")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { q?: string; checkout?: string; cat?: string } => ({
     // undefined keeps empty values out of the address bar
     q: typeof search.q === "string" && search.q ? search.q : undefined,
     checkout: typeof search.checkout === "string" && search.checkout ? search.checkout : undefined,
+    cat: typeof search.cat === "string" && search.cat ? search.cat : undefined,
   }),
   head: () => ({
     meta: [{ title: "Ebook shop | Positive Autism" }],
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/shop")({
 });
 
 function ShopRoute() {
-  const { q, checkout } = Route.useSearch();
-  return <ShopPage initialQ={q ?? ""} cancelled={checkout === "cancelled"} />;
+  const { q, checkout, cat } = Route.useSearch();
+  // key: arriving from an ebook page with another topic or search re-mounts the page with those filters
+  return <ShopPage key={`${q ?? ""}|${cat ?? ""}`} initialQ={q ?? ""} initialCat={cat ?? ""} cancelled={checkout === "cancelled"} />;
 }

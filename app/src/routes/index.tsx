@@ -48,20 +48,6 @@ function useMotion(rootRef: React.RefObject<HTMLDivElement | null>) {
       if (!root) return;
       const mm = gsap.matchMedia();
 
-      // ---- side rail: highlights the section you are in (works with or without motion) ----
-      const railTargets = gsap.utils.toArray<HTMLElement>("[data-rail]", root);
-      const railLinks = gsap.utils.toArray<HTMLAnchorElement>(".pa-rail a", root);
-      const inView = new Set<HTMLElement>();
-      const io = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((e) => (e.isIntersecting ? inView.add(e.target as HTMLElement) : inView.delete(e.target as HTMLElement)));
-          const cur = [...inView].sort((p, q) => railTargets.indexOf(p) - railTargets.indexOf(q)).pop();
-          railLinks.forEach((l) => l.classList.toggle("is-active", !!cur && l.getAttribute("href") === `#${cur.id}`));
-        },
-        { rootMargin: "-45% 0px -50% 0px" },
-      );
-      railTargets.forEach((s) => io.observe(s));
-
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         // ---- smooth scrolling, driven by GSAP's ticker so ScrollTrigger stays in sync ----
         const lenis = new Lenis({ lerp: 0.085, smoothWheel: true, wheelMultiplier: 0.9, anchors: true });
@@ -83,8 +69,7 @@ function useMotion(rootRef: React.RefObject<HTMLDivElement | null>) {
           .timeline({ paused: true, defaults: { ease: "power3.out" } })
           .from(".pa-header-in > *", { autoAlpha: 0, duration: 0.8, stagger: 0.08 })
           .from(".pa-eyebrow, .pa-hero h1, .pa-lead", { autoAlpha: 0, duration: 1, stagger: 0.12 }, 0.1)
-          .from(".pa-hero-actions > *", { autoAlpha: 0, scale: 0.9, duration: 0.7, stagger: 0.1 }, "-=0.5")
-          .from(".pa-rail", { autoAlpha: 0, x: 24, duration: 0.8 }, "-=0.4");
+          .from(".pa-hero-actions > *", { autoAlpha: 0, scale: 0.9, duration: 0.7, stagger: 0.1 }, "-=0.5");
         let started = false;
         const html = document.documentElement;
         const begin = () => {
@@ -245,7 +230,6 @@ function useMotion(rootRef: React.RefObject<HTMLDivElement | null>) {
       });
 
       return () => {
-        io.disconnect();
         mm.revert();
       };
     },
@@ -278,21 +262,6 @@ function Page() {
           <span className="pa-loader-bar" />
         </div>
       </div>
-      <nav className="pa-rail" aria-label={t.mainNav}>
-        {[
-          ["top", t.nav.home],
-          ["autism-info", t.nav.info],
-          ["resources", t.nav.resources],
-          ["ebooks", t.nav.ebooks],
-          ["news", t.nav.news],
-          ["neurodiversity", t.nav.neuro],
-          ["about", t.nav.about],
-        ].map(([id, label]) => (
-          <a key={id} href={`#${id}`} aria-label={label}>
-            <span>{label}</span>
-          </a>
-        ))}
-      </nav>
       <div className="pa-progress" aria-hidden="true" />
 
       <a className="pa-skip" href="#main">
@@ -302,7 +271,7 @@ function Page() {
       <SiteHeader home />
 
       <main id="main">
-        <section className="pa-hero pa-layer" id="top" data-rail>
+        <section className="pa-hero pa-layer" id="top">
           <HeroScene />
           <div className="pa-wrap pa-hero-grid">
             <div>
@@ -328,7 +297,7 @@ function Page() {
           </div>
         </section>
 
-        <section className="pa-section pa-layer" id="autism-info" data-rail>
+        <section className="pa-section pa-layer" id="autism-info">
           <span className="pa-seam pa-seam-a" aria-hidden="true" />
           <div className="pa-wrap">
             <h2 className="pa-h2">{t.info.h2}</h2>
@@ -397,7 +366,7 @@ function Page() {
           </div>
         </section>
 
-        <section className="pa-hscroll pa-layer" id="resources" data-rail data-flat>
+        <section className="pa-hscroll pa-layer" id="resources" data-flat>
           <div className="pa-hscroll-bg" aria-hidden="true">
             <img src="/assets/img/hero.webp" alt="" loading="lazy" />
           </div>
@@ -425,7 +394,7 @@ function Page() {
           </div>
         </section>
 
-        <section className="pa-section pa-ebooks pa-layer" id="ebooks" data-rail>
+        <section className="pa-section pa-ebooks pa-layer" id="ebooks">
           <span className="pa-seam pa-seam-c" aria-hidden="true" />
           <div className="pa-wrap">
             <h2 className="pa-h2">{t.ebooks.h2}</h2>
@@ -484,7 +453,7 @@ function Page() {
           </div>
         </section>
 
-        <section className="pa-section pa-news pa-layer" id="news" data-rail data-flat>
+        <section className="pa-section pa-news pa-layer" id="news" data-flat>
           <div className="pa-wrap">
             <h2 className="pa-h2">{t.news.h2}</h2>
             <p className="pa-sub">{t.news.sub}</p>
@@ -503,7 +472,7 @@ function Page() {
           </div>
         </section>
 
-        <section className="pa-section pa-layer" id="neurodiversity" data-rail>
+        <section className="pa-section pa-layer" id="neurodiversity">
           <span className="pa-seam pa-seam-c" aria-hidden="true" />
           <div className="pa-wrap pa-neuro">
             <div className="pa-neuro-card pa-reveal">
@@ -521,7 +490,7 @@ function Page() {
           </div>
         </section>
 
-        <section className="pa-section pa-about pa-layer" id="about" data-rail>
+        <section className="pa-section pa-about pa-layer" id="about">
           <span className="pa-seam pa-seam-a" aria-hidden="true" />
           <div className="pa-wrap pa-about-grid">
             <div className="pa-about-copy">

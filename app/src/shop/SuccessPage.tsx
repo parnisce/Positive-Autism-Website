@@ -3,7 +3,7 @@ import { PrefsProvider } from "../components/pa/prefs";
 import { SiteFooter, SiteHeader } from "../components/pa/SiteChrome";
 import "./shop.css";
 import { CartProvider, useCart } from "./cart";
-import { useShopCopy } from "./ShopPage";
+import { useShopCopy } from "./useShopCopy";
 
 type Status =
   | { state: "loading" }
@@ -55,7 +55,7 @@ function Success({ sessionId }: { sessionId: string }) {
                         <strong>{i.title}</strong>
                       </div>
                       {i.download && (
-                        <a className="pa-prod-btn" href={i.download} download>
+                        <a className="pa-s-btn" href={i.download} download>
                           {x.download}
                         </a>
                       )}

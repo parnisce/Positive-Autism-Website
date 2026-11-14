@@ -395,21 +395,6 @@ main > .pa-layer:nth-child(10) { --pa-z: 10; }
 .pa-seam-c { right: 15%; border-radius: 50% 50% 50% 10%; background: var(--pa-gold); box-shadow: inset -9px -9px 0 rgba(0, 0, 0, .07); }
 @keyframes pa-seam-float { 50% { translate: 0 -10px; scale: 1.06; } }
 
-/* section indicator on the right */
-.pa-rail { position: fixed; right: 22px; top: 50%; transform: translateY(-50%); z-index: 45; display: none; flex-direction: column; gap: 14px; }
-@media (min-width: 1200px) { .pa-rail { display: flex; } }
-.pa-rail a { position: relative; width: 14px; height: 14px; border-radius: 50%; background: var(--pa-white); box-shadow: 0 0 0 2px rgba(18, 51, 58, .55); opacity: .75; transition: transform .3s, background .3s, opacity .3s; }
-.pa-rail a:hover { opacity: 1; transform: scale(1.2); }
-.pa-rail a.is-active { background: var(--pa-orange); opacity: 1; transform: scale(1.4); }
-.pa-rail a span { position: absolute; right: 26px; top: 50%; transform: translate(8px, -50%); padding: 4px 12px; border-radius: 999px; background: var(--pa-ink); color: var(--pa-white); font-size: 13px; font-weight: 600; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
-.pa-rail a:hover span, .pa-rail a:focus-visible span { opacity: 1; transform: translate(0, -50%); }
-.pa-loading .pa-rail { visibility: hidden; }
-
-/* Lenis smooth scroll (recommended base styles) */
-html.lenis, html.lenis body { height: auto; }
-.lenis.lenis-smooth { scroll-behavior: auto !important; }
-.lenis.lenis-stopped { overflow: hidden; }
-
 /* intro loader with percentage counter */
 .pa-loader { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: var(--pa-teal); color: var(--pa-white); animation: pa-loader-failsafe .01s 7s forwards; }
 @keyframes pa-loader-failsafe { to { visibility: hidden; opacity: 0; } }

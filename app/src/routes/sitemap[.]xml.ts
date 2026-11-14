@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { PRODUCTS } from "../shop/catalog";
+
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
@@ -21,6 +23,14 @@ export const Route = createFileRoute("/sitemap.xml")({
             `    <lastmod>${today}</lastmod>`,
             "    <changefreq>yearly</changefreq>",
             "    <priority>0.3</priority>",
+            "  </url>",
+          ]),
+          ...PRODUCTS.flatMap((p) => [
+            "  <url>",
+            `    <loc>${origin}/shop/ebook/${p.slug}</loc>`,
+            `    <lastmod>${today}</lastmod>`,
+            "    <changefreq>monthly</changefreq>",
+            "    <priority>0.5</priority>",
             "  </url>",
           ]),
           "</urlset>",
