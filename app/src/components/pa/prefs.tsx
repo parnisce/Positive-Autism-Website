@@ -49,6 +49,7 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
   }, [lang]);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
   }, [theme]);
 
   const setLang = useCallback((l: Lang) => {

@@ -24,6 +24,7 @@ export const ARTICLE_IMAGES = [
 
 const en = {
   skip: "Skip to content",
+  legalBack: "Back to home",
   homeLabel: "Positive Autism home",
   menu: "Menu",
   shop: "Shop ebooks",
@@ -226,7 +227,13 @@ const en = {
     explore: "Explore",
     learn: "Learn",
     connect: "Connect",
-    credit: "Positive Autism. All rights reserved.",
+    made: "Made for you ❤️",
+    legal: "Legal",
+    userData: "User Data Management",
+    terms: "Terms And Conditions",
+    privacy: "Privacy Policy",
+    credit:
+      "Copyright 2026 Positive Autism. The content of this website is protected by copyright. All rights reserved.",
     film: "Accepted As I Am",
   },
   subscribe: {
@@ -246,6 +253,7 @@ export type Copy = typeof en;
 
 const es: Copy = {
   skip: "Saltar al contenido",
+  legalBack: "Volver al inicio",
   homeLabel: "Inicio de Positive Autism",
   menu: "Menú",
   shop: "Ver ebooks",
@@ -448,7 +456,13 @@ const es: Copy = {
     explore: "Explorar",
     learn: "Aprender",
     connect: "Conecta",
-    credit: "Positive Autism. Todos los derechos reservados.",
+    made: "Hecho para ti ❤️",
+    legal: "Legal",
+    userData: "Gestión de Datos de Usuario",
+    terms: "Términos y Condiciones",
+    privacy: "Política de Privacidad",
+    credit:
+      "Copyright 2026 Positive Autism. El contenido de este sitio web está protegido por derechos de autor. Todos los derechos reservados.",
     film: "Accepted As I Am",
   },
   subscribe: {

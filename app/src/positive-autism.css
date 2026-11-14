@@ -34,7 +34,7 @@
   color-scheme: dark;
 }
 :root { scroll-padding-top: 84px; }
-.pa-root { background: var(--pa-paper); color: var(--pa-text); font-family: "Outfit", system-ui, sans-serif; line-height: 1.65; min-height: 100dvh; transition: background .3s, color .3s; }
+.pa-root { background: var(--pa-paper); color: var(--pa-text); font-family: "Outfit", system-ui, sans-serif; line-height: 1.65; min-height: 100dvh; }
 .pa-root * { box-sizing: border-box; }
 .pa-root a { color: inherit; }
 .pa-wrap { width: min(1440px, 100%); padding-inline: clamp(20px, 3.4vw, 48px); margin-inline: auto; }
@@ -301,8 +301,11 @@
 .pa-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .pa-footer a { text-decoration: none; }
 .pa-footer a:hover { text-decoration: underline; }
-.pa-footer small { display: block; margin-top: 36px; opacity: .8; }
-@media (min-width: 800px) { .pa-footer-grid { grid-template-columns: 1.4fr 1fr 1fr 1fr; } }
+.pa-footer p { margin: 0 0 8px; }
+.pa-footer .pa-made { margin-top: 14px; font-weight: 600; color: var(--pa-white); }
+.pa-footer .pa-copy { display: block; margin-top: 40px; padding-top: 22px; border-top: 1px solid rgba(255, 255, 255, .16); text-align: center; font-size: 14px; opacity: .85; }
+@media (min-width: 800px) { .pa-footer-grid { grid-template-columns: 1fr 1fr 1fr; } }
+@media (min-width: 1100px) { .pa-footer-grid { grid-template-columns: 1.5fr 1fr 1fr 1fr 1.3fr; } }
 
 /* footer: stay connected */
 .pa-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
@@ -318,6 +321,22 @@
 .pa-subscribe-form button:disabled { opacity: .7; cursor: progress; }
 .pa-subscribe-note { min-height: 1.5em; font-size: 15px; color: var(--pa-white); }
 @media (min-width: 800px) { .pa-subscribe { grid-template-columns: 1fr 1.6fr; align-items: start; } .pa-subscribe-fields { grid-template-columns: 1fr 1fr; } }
+
+/* legal pages */
+.pa-legal { padding: 140px 0 88px; min-height: 70dvh; }
+.pa-back { display: inline-block; margin-bottom: 28px; font-weight: 600; text-decoration: none; color: var(--pa-teal-text) !important; border-bottom: 2px solid var(--pa-orange); }
+.pa-back:hover { border-color: var(--pa-teal-text); }
+.pa-legal-doc { max-width: 860px; }
+.pa-legal-doc h1 { margin: 0 0 8px; font-size: clamp(36px, 5vw, 58px); line-height: 1.05; letter-spacing: -0.03em; }
+.pa-legal-date { margin: 0 0 24px; color: var(--pa-orange-deep); font-weight: 600; font-size: 15px; }
+.pa-legal-intro { font-size: 20px; color: var(--pa-muted); margin: 0 0 12px; }
+.pa-legal-doc section { padding-top: 28px; margin-top: 28px; border-top: 1px solid var(--pa-line); }
+.pa-legal-doc h2 { margin: 0 0 12px; font-size: 24px; line-height: 1.2; letter-spacing: -0.01em; display: flex; gap: 14px; align-items: baseline; }
+.pa-legal-doc h2 span { font-size: 15px; letter-spacing: .1em; color: var(--pa-orange-deep); }
+.pa-legal-doc p { margin: 0 0 14px; font-size: 18px; }
+.pa-legal-doc ul { margin: 0 0 14px; padding-left: 22px; display: grid; gap: 10px; font-size: 18px; list-style: disc; }
+.pa-legal-doc li::marker { color: var(--pa-orange); }
+.pa-legal-doc a { color: var(--pa-teal-text); text-underline-offset: 3px; }
 
 /* motion */
 .pa-root { overflow-x: clip; }

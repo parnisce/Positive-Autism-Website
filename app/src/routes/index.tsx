@@ -1,15 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRef, type MouseEvent } from "react";
+import { useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 
 import "../positive-autism.css";
-import { Controls } from "../components/pa/Controls";
+import { THEME_BOOT } from "../theme-boot";
 import { HeroScene } from "../components/pa/HeroScene";
 import { InfoCards } from "../components/pa/InfoCards";
 import { PrefsProvider, usePrefs } from "../components/pa/prefs";
-import { SubscribeForm } from "../components/pa/SubscribeForm";
+import { SiteFooter, SiteHeader } from "../components/pa/SiteChrome";
 import Magnet from "../components/react-bits/Magnet";
 import SpotlightCard from "../components/react-bits/SpotlightCard";
 import TiltedCard from "../components/react-bits/TiltedCard";
@@ -20,6 +20,7 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 export const Route = createFileRoute("/")({
   head: () => ({
+    scripts: [{ children: THEME_BOOT }],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" as const },
@@ -123,11 +124,6 @@ function useMotion(rootRef: React.RefObject<HTMLDivElement | null>) {
   );
 }
 
-/** Close the mobile menu after choosing a link. */
-const closeMenu = (e: MouseEvent<HTMLElement>) => {
-  e.currentTarget.closest("details")?.removeAttribute("open");
-};
-
 function Index() {
   return (
     <PrefsProvider>
@@ -141,14 +137,6 @@ function Page() {
   const rootRef = useRef<HTMLDivElement>(null);
   useMotion(rootRef);
 
-  const nav = [
-    { href: "#autism-info", label: t.nav.info },
-    { href: "#resources", label: t.nav.resources },
-    { href: "#ebooks", label: t.nav.ebooks },
-    { href: "#news", label: t.nav.news },
-    { href: "#neurodiversity", label: t.nav.neuro },
-    { href: "#about", label: t.nav.about },
-  ];
   const panelLinks = [LINKS.resources, LINKS.resources];
   const panelImages = ["/assets/img/bloom-5.webp", "/assets/img/together.webp"];
 
@@ -159,40 +147,7 @@ function Page() {
         {t.skip}
       </a>
 
-      <header className="pa-header">
-        <div className="pa-wrap pa-header-in">
-          <a className="pa-logo" href="#top" aria-label={t.homeLabel}>
-            <img src="/assets/img/logo.png" alt="Positive Autism" width={236} height={60} />
-          </a>
-          <nav className="pa-nav" aria-label={t.mainNav}>
-            {nav.map((n) => (
-              <a key={n.href} href={n.href}>
-                {n.label}
-              </a>
-            ))}
-          </nav>
-          <div className="pa-header-right">
-            <Controls />
-            <a className="pa-contact-btn" href="#ebooks">
-              {t.shop}
-            </a>
-          </div>
-          <details className="pa-menu">
-            <summary>{t.menu}</summary>
-            <div className="pa-menu-list">
-              {nav.map((n) => (
-                <a key={n.href} href={n.href} onClick={closeMenu}>
-                  {n.label}
-                </a>
-              ))}
-              <a href="#ebooks" onClick={closeMenu}>
-                {t.shop}
-              </a>
-              <Controls className="pa-menu-ctrl" />
-            </div>
-          </details>
-        </div>
-      </header>
+      <SiteHeader home />
 
       <main id="main">
         <section className="pa-hero" id="top">
@@ -450,49 +405,7 @@ function Page() {
         </section>
       </main>
 
-      <footer className="pa-footer">
-        <div className="pa-wrap">
-          <div className="pa-subscribe" id="stay-connected">
-            <div>
-              <h3>{t.subscribe.h3}</h3>
-              <p>{t.subscribe.text}</p>
-            </div>
-            <SubscribeForm />
-          </div>
-          <div className="pa-footer-grid">
-            <div>
-              <img src="/assets/img/logo.png" alt="Positive Autism" width={173} height={44} />
-              <p>{t.footer.tagline}</p>
-            </div>
-            <div>
-              <h4>{t.footer.explore}</h4>
-              <ul>
-                <li><a href="#autism-info">{t.nav.info}</a></li>
-                <li><a href="#resources">{t.nav.resources}</a></li>
-                <li><a href="#ebooks">{t.nav.ebooks}</a></li>
-                <li><a href="#news">{t.nav.news}</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4>{t.footer.learn}</h4>
-              <ul>
-                <li><a href="#neurodiversity">{t.nav.neuro}</a></li>
-                <li><a href="#film">{t.footer.film}</a></li>
-                <li><a href="#about">{t.nav.about}</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4>{t.footer.connect}</h4>
-              <ul>
-                <li><a href={LINKS.subscribe}>{t.community.contact}</a></li>
-                <li><a href={LINKS.facebook}>Facebook</a></li>
-                <li><a href={LINKS.youtube}>YouTube</a></li>
-              </ul>
-            </div>
-          </div>
-          <small>{t.footer.credit}</small>
-        </div>
-      </footer>
+      <SiteFooter home />
     </div>
   );
 }
