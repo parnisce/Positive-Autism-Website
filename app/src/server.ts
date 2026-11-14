@@ -40,6 +40,8 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    // Keep the platform env (variables and secrets) reachable for server routes such as /api/checkout.
+    (globalThis as unknown as { __paEnv?: unknown }).__paEnv = env;
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);

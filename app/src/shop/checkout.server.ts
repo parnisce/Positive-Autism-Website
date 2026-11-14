@@ -18,16 +18,55 @@ function json(data: unknown, status = 200) {
   });
 }
 
-async function secretKey(): Promise<string | undefined> {
+type Found = { key?: string; via: "request-env" | "cloudflare:workers" | "process.env" | null; names: string[] };
+
+/** Looks for STRIPE_SECRET_KEY in the request env, the Workers env module and process.env. */
+async function findSecret(): Promise<Found> {
+  const names = new Set<string>();
+  const note = (o: unknown) => {
+    if (o && typeof o === "object") for (const k of Object.keys(o)) names.add(k);
+  };
+  const pick = (o: unknown) => {
+    const v = o && typeof o === "object" ? (o as Record<string, unknown>).STRIPE_SECRET_KEY : undefined;
+    return typeof v === "string" && v.trim() ? v.trim() : undefined;
+  };
+
+  const reqEnv = (globalThis as unknown as { __paEnv?: unknown }).__paEnv;
+  note(reqEnv);
+  let key = pick(reqEnv);
+  if (key) return { key, via: "request-env", names: [...names] };
+
   try {
     const { bindings } = await import("../lib/bindings.server");
-    const v = (bindings() as unknown as Record<string, unknown>)?.STRIPE_SECRET_KEY;
-    if (typeof v === "string" && v) return v;
+    const b = bindings();
+    note(b);
+    key = pick(b);
+    if (key) return { key, via: "cloudflare:workers", names: [...names] };
   } catch {
-    /* not running inside Workers (local dev): fall back to process.env */
+    /* not running inside Workers (local dev) */
   }
-  const env = (globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }).process?.env;
-  return env?.STRIPE_SECRET_KEY || undefined;
+
+  const penv = (globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }).process?.env;
+  note(penv);
+  key = pick(penv);
+  return { key, via: key ? "process.env" : null, names: [...names] };
+}
+
+async function secretKey(): Promise<string | undefined> {
+  return (await findSecret()).key;
+}
+
+/** GET /api/checkout: says whether the key is visible to the server. Never reveals the key itself. */
+export async function checkoutDiagnostic(): Promise<Response> {
+  const f = await findSecret();
+  return json({
+    configured: !!f.key,
+    mode: f.key ? (f.key.startsWith("sk_live_") ? "live" : f.key.startsWith("sk_test_") ? "test" : "unknown") : null,
+    foundVia: f.via,
+    variablesVisible: f.names.length,
+    // names that look like a Stripe setting, to spot a typo in the variable name
+    stripeLikeNames: f.names.filter((n) => /stripe/i.test(n)),
+  });
 }
 
 export async function createCheckout(request: Request): Promise<Response> {
