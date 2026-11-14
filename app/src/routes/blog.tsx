@@ -1,0 +1,20 @@
+import { createFileRoute } from "@tanstack/react-router";
+
+import "../positive-autism.css";
+import { getPosts } from "../admin/site.functions";
+import { BlogIndex } from "../blog/BlogPages";
+import { THEME_BOOT } from "../theme-boot";
+
+export const Route = createFileRoute("/blog")({
+  loader: () => getPosts(),
+  head: () => ({
+    meta: [{ title: "Blog | Positive Autism" }, { name: "description", content: "Stories, tips and news about autism from Positive Autism." }],
+    scripts: [{ children: THEME_BOOT }],
+    links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" as const },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" },
+    ],
+  }),
+  component: () => <BlogIndex posts={Route.useLoaderData()} />,
+});

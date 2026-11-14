@@ -10,16 +10,22 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as BlogRouteImport } from './routes/blog'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsAndConditionsRouteImport } from './routes/terms-and-conditions'
 import { Route as UserDataManagementRouteImport } from './routes/user-data-management'
+import { Route as ApiAdminRouteImport } from './routes/api.admin'
 import { Route as ApiCheckoutRouteImport } from './routes/api.checkout'
 import { Route as ApiCheckoutStatusRouteImport } from './routes/api.checkout-status'
+import { Route as ApiTrackRouteImport } from './routes/api.track'
+import { Route as BlogSlugRouteImport } from './routes/blog_.$slug'
 import { Route as ShopSuccessRouteImport } from './routes/shop_.success'
+import { Route as ApiImgIdRouteImport } from './routes/api.img.$id'
 import { Route as ShopEbookSlugRouteImport } from './routes/shop_.ebook.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -27,9 +33,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
@@ -62,6 +78,11 @@ const UserDataManagementRoute = UserDataManagementRouteImport.update({
   path: '/user-data-management',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminRoute = ApiAdminRouteImport.update({
+  id: '/api/admin',
+  path: '/api/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCheckoutRoute = ApiCheckoutRouteImport.update({
   id: '/api/checkout',
   path: '/api/checkout',
@@ -72,9 +93,24 @@ const ApiCheckoutStatusRoute = ApiCheckoutStatusRouteImport.update({
   path: '/api/checkout-status',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTrackRoute = ApiTrackRouteImport.update({
+  id: '/api/track',
+  path: '/api/track',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/blog_/$slug',
+  path: '/blog/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShopSuccessRoute = ShopSuccessRouteImport.update({
   id: '/shop_/success',
   path: '/shop/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiImgIdRoute = ApiImgIdRouteImport.update({
+  id: '/api/img/$id',
+  path: '/api/img/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShopEbookSlugRoute = ShopEbookSlugRouteImport.update({
@@ -85,104 +121,146 @@ const ShopEbookSlugRoute = ShopEbookSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/app': typeof AppRoute
+  '/blog': typeof BlogRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/user-data-management': typeof UserDataManagementRoute
+  '/api/admin': typeof ApiAdminRoute
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/checkout-status': typeof ApiCheckoutStatusRoute
+  '/api/track': typeof ApiTrackRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/shop/success': typeof ShopSuccessRoute
+  '/api/img/$id': typeof ApiImgIdRoute
   '/shop/ebook/$slug': typeof ShopEbookSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/app': typeof AppRoute
+  '/blog': typeof BlogRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/user-data-management': typeof UserDataManagementRoute
+  '/api/admin': typeof ApiAdminRoute
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/checkout-status': typeof ApiCheckoutStatusRoute
+  '/api/track': typeof ApiTrackRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/shop/success': typeof ShopSuccessRoute
+  '/api/img/$id': typeof ApiImgIdRoute
   '/shop/ebook/$slug': typeof ShopEbookSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/app': typeof AppRoute
+  '/blog': typeof BlogRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/user-data-management': typeof UserDataManagementRoute
+  '/api/admin': typeof ApiAdminRoute
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/checkout-status': typeof ApiCheckoutStatusRoute
+  '/api/track': typeof ApiTrackRoute
+  '/blog_/$slug': typeof BlogSlugRoute
   '/shop_/success': typeof ShopSuccessRoute
+  '/api/img/$id': typeof ApiImgIdRoute
   '/shop_/ebook/$slug': typeof ShopEbookSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/app'
+    | '/blog'
     | '/privacy-policy'
     | '/robots.txt'
     | '/shop'
     | '/sitemap.xml'
     | '/terms-and-conditions'
     | '/user-data-management'
+    | '/api/admin'
     | '/api/checkout'
     | '/api/checkout-status'
+    | '/api/track'
+    | '/blog/$slug'
     | '/shop/success'
+    | '/api/img/$id'
     | '/shop/ebook/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/app'
+    | '/blog'
     | '/privacy-policy'
     | '/robots.txt'
     | '/shop'
     | '/sitemap.xml'
     | '/terms-and-conditions'
     | '/user-data-management'
+    | '/api/admin'
     | '/api/checkout'
     | '/api/checkout-status'
+    | '/api/track'
+    | '/blog/$slug'
     | '/shop/success'
+    | '/api/img/$id'
     | '/shop/ebook/$slug'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/app'
+    | '/blog'
     | '/privacy-policy'
     | '/robots.txt'
     | '/shop'
     | '/sitemap.xml'
     | '/terms-and-conditions'
     | '/user-data-management'
+    | '/api/admin'
     | '/api/checkout'
     | '/api/checkout-status'
+    | '/api/track'
+    | '/blog_/$slug'
     | '/shop_/success'
+    | '/api/img/$id'
     | '/shop_/ebook/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   AppRoute: typeof AppRoute
+  BlogRoute: typeof BlogRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   ShopRoute: typeof ShopRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsAndConditionsRoute: typeof TermsAndConditionsRoute
   UserDataManagementRoute: typeof UserDataManagementRoute
+  ApiAdminRoute: typeof ApiAdminRoute
   ApiCheckoutRoute: typeof ApiCheckoutRoute
   ApiCheckoutStatusRoute: typeof ApiCheckoutStatusRoute
+  ApiTrackRoute: typeof ApiTrackRoute
+  BlogSlugRoute: typeof BlogSlugRoute
   ShopSuccessRoute: typeof ShopSuccessRoute
+  ApiImgIdRoute: typeof ApiImgIdRoute
   ShopEbookSlugRoute: typeof ShopEbookSlugRoute
 }
 
@@ -195,11 +273,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app': {
       id: '/app'
       path: '/app'
       fullPath: '/app'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy-policy': {
@@ -244,6 +336,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserDataManagementRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin': {
+      id: '/api/admin'
+      path: '/api/admin'
+      fullPath: '/api/admin'
+      preLoaderRoute: typeof ApiAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/checkout': {
       id: '/api/checkout'
       path: '/api/checkout'
@@ -258,11 +357,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCheckoutStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/track': {
+      id: '/api/track'
+      path: '/api/track'
+      fullPath: '/api/track'
+      preLoaderRoute: typeof ApiTrackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog_/$slug': {
+      id: '/blog_/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shop_/success': {
       id: '/shop_/success'
       path: '/shop/success'
       fullPath: '/shop/success'
       preLoaderRoute: typeof ShopSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/img/$id': {
+      id: '/api/img/$id'
+      path: '/api/img/$id'
+      fullPath: '/api/img/$id'
+      preLoaderRoute: typeof ApiImgIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shop_/ebook/$slug': {
@@ -277,16 +397,22 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   AppRoute: AppRoute,
+  BlogRoute: BlogRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   ShopRoute: ShopRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsAndConditionsRoute: TermsAndConditionsRoute,
   UserDataManagementRoute: UserDataManagementRoute,
+  ApiAdminRoute: ApiAdminRoute,
   ApiCheckoutRoute: ApiCheckoutRoute,
   ApiCheckoutStatusRoute: ApiCheckoutStatusRoute,
+  ApiTrackRoute: ApiTrackRoute,
+  BlogSlugRoute: BlogSlugRoute,
   ShopSuccessRoute: ShopSuccessRoute,
+  ApiImgIdRoute: ApiImgIdRoute,
   ShopEbookSlugRoute: ShopEbookSlugRoute,
 }
 export const routeTree = rootRouteImport

@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { trackEvent } from "../admin/Tracker";
 
 const KEY = "pa-cart";
 const MAX_ITEMS = 50;
@@ -43,7 +44,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [ids, ready]);
 
-  const add = useCallback((id: number) => setIds((cur) => (cur.includes(id) || cur.length >= MAX_ITEMS ? cur : [...cur, id])), []);
+  const add = useCallback((id: number) => {
+    trackEvent({ e: "cart", id });
+    setIds((cur) => (cur.includes(id) || cur.length >= MAX_ITEMS ? cur : [...cur, id]));
+  }, []);
   const remove = useCallback((id: number) => setIds((cur) => cur.filter((x) => x !== id)), []);
   const clear = useCallback(() => setIds([]), []);
 

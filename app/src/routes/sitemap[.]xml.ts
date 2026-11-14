@@ -6,6 +6,11 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async ({ request }) => {
+        const { syncSite } = await import("../admin/data.server");
+        await syncSite();
+        const { getDb } = await import("../admin/db.server");
+        const db = await getDb();
+        const posts = db ? (await db.prepare("SELECT slug FROM posts WHERE published = 1").all<{ slug: string }>()).results : [];
         const origin = new URL(request.url).origin;
         const today = new Date().toISOString().split("T")[0];
         const xml = [
@@ -17,12 +22,18 @@ export const Route = createFileRoute("/sitemap.xml")({
           "    <changefreq>weekly</changefreq>",
           "    <priority>1.0</priority>",
           "  </url>",
-          ...["shop", "privacy-policy", "terms-and-conditions", "user-data-management"].flatMap((p) => [
+          ...["shop", "blog", "privacy-policy", "terms-and-conditions", "user-data-management"].flatMap((p) => [
             "  <url>",
             `    <loc>${origin}/${p}</loc>`,
             `    <lastmod>${today}</lastmod>`,
             "    <changefreq>yearly</changefreq>",
             "    <priority>0.3</priority>",
+            "  </url>",
+          ]),
+          ...posts.flatMap((p) => [
+            "  <url>",
+            `    <loc>${origin}/blog/${p.slug}</loc>`,
+            `    <lastmod>${today}</lastmod>`,
             "  </url>",
           ]),
           ...PRODUCTS.flatMap((p) => [

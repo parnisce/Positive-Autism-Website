@@ -17,6 +17,10 @@ import { reportHiggsfieldError } from "../lib/higgsfield-error-reporting";
 // repo by the marketplace meta API and read at BUILD time — no runtime fetch.
 // Editing it via the app settings UI rewrites this file and redeploys the app.
 import appMetaJson from "../app-meta.json";
+import { applyContent } from "../admin/site-data";
+import { getSiteData } from "../admin/site.functions";
+import { Tracker } from "../admin/Tracker";
+import { applyProductEdits } from "../shop/catalog";
 
 declare const __HF_DESIGN_INSPECTOR__: boolean;
 
@@ -120,7 +124,8 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error: raw, reset }: { error: unknown; reset: () => void }) {
+  const error = raw instanceof Error ? raw : new Error(String(raw));
   console.error(error);
   const router = useRouter();
   useEffect(() => {
@@ -156,6 +161,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   // Read the committed page metadata at build time (no runtime fetch).
   head: () => buildHead(appMeta),
+  // text and product edits made on the admin page
+  loader: () => getSiteData(),
+  staleTime: 30_000,
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -183,6 +191,9 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const site = Route.useLoaderData();
+  applyContent(site.content);
+  applyProductEdits(site.products);
 
   useEffect(() => {
     if (!__HF_DESIGN_INSPECTOR__) {
@@ -207,6 +218,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <Tracker />
     </QueryClientProvider>
   );
 }

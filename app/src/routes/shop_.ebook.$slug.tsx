@@ -2,12 +2,15 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import "../positive-autism.css";
 import { THEME_BOOT } from "../theme-boot";
-import { loadDetails, productFromSlug } from "../shop/catalog";
+import { getSiteData } from "../admin/site.functions";
+import { applyProductEdits, loadDetails, productFromSlug } from "../shop/catalog";
 import { ProductNotFound, ProductPage } from "../shop/ProductPage";
 
 /** /shop/ebook/<name>-<id>: one page with everything about a single ebook. */
 export const Route = createFileRoute("/shop_/ebook/$slug")({
   loader: async ({ params }) => {
+    // on the server the page loader can run before the root loader: load the admin's edits first
+    if (typeof window === "undefined") applyProductEdits((await getSiteData()).products);
     const product = productFromSlug(params.slug);
     if (!product) return { product: null, details: null };
     return { product, details: (await loadDetails(product.id)) ?? null };

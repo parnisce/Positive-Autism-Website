@@ -5,7 +5,9 @@
  * project settings) and never leaves the server. Prices always come from the catalogue file here,
  * never from the browser, so a visitor cannot change what they pay.
  */
-import { CURRENCY, getProduct } from "./catalog";
+import { syncSite } from "../admin/data.server";
+import { recordCheckout } from "../admin/track.server";
+import { CURRENCY, getProduct, productFile } from "./catalog";
 import { DOWNLOADS } from "./downloads";
 
 const STRIPE = "https://api.stripe.com/v1";
@@ -70,6 +72,7 @@ export async function checkoutDiagnostic(): Promise<Response> {
 }
 
 export async function createCheckout(request: Request): Promise<Response> {
+  await syncSite();
   let body: { ids?: unknown; lang?: unknown };
   try {
     body = (await request.json()) as typeof body;
@@ -115,11 +118,13 @@ export async function createCheckout(request: Request): Promise<Response> {
     console.error("Stripe checkout session failed", res.status, data.error?.message);
     return json({ code: "stripe_error" }, 502);
   }
+  await recordCheckout(items.map((i) => i.id));
   return json({ url: data.url });
 }
 
 /** After payment: confirm the session with Stripe and return what was bought (plus download links, if configured). */
 export async function checkoutStatus(request: Request): Promise<Response> {
+  await syncSite();
   const id = new URL(request.url).searchParams.get("session_id") || "";
   if (!/^cs_[A-Za-z0-9_]{10,200}$/.test(id)) return json({ code: "bad_request" }, 400);
   const key = await secretKey();
@@ -141,6 +146,6 @@ export async function checkoutStatus(request: Request): Promise<Response> {
   return json({
     paid,
     email: s.customer_details?.email ?? null,
-    items: products.map((p) => ({ id: p.id, title: p.title, img: p.img, download: paid ? DOWNLOADS[p.id] ?? null : null })),
+    items: products.map((p) => ({ id: p.id, title: p.title, img: p.img, download: paid ? productFile(p.id) || DOWNLOADS[p.id] || null : null })),
   });
 }

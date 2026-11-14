@@ -9,7 +9,7 @@ import { scrollToEl, useScrolledHeader, useSmoothScroll } from "../components/pa
 import "./shop.css";
 import { CartProvider } from "./cart";
 import { CartDrawer, CartFab } from "./CartUI";
-import { CATEGORIES, PRODUCTS, categoryName, formatPrice, tintFor, type Product } from "./catalog";
+import { CATEGORIES, PRODUCTS, catalogVersion, categoryName, formatPrice, tintFor, type Product } from "./catalog";
 import { ProductCard } from "./ProductCard";
 import { useShopCopy } from "./useShopCopy";
 
@@ -33,7 +33,7 @@ const heroCovers = () => {
   return out;
 };
 /** A different cover for each topic tile (the first ebook of that topic not already used by an earlier tile). */
-const TOPIC_COVERS = (() => {
+const topicCovers = () => {
   const used = new Set<number>();
   const map = new Map<string, string>();
   for (const c of CATEGORIES) {
@@ -45,8 +45,13 @@ const TOPIC_COVERS = (() => {
     }
   }
   return map;
-})();
-const topicCover = (slug: string) => TOPIC_COVERS.get(slug);
+};
+let coverCache: { v: number; map: Map<string, string> } | null = null;
+const topicCover = (slug: string) => {
+  const v = catalogVersion();
+  if (!coverCache || coverCache.v !== v) coverCache = { v, map: topicCovers() };
+  return coverCache.map.get(slug);
+};
 
 /* ------------------------------------------------------------------ hero */
 
