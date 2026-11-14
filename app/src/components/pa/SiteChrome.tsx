@@ -64,7 +64,7 @@ export function SiteFooter({ home = false }: { home?: boolean }) {
   const base = home ? "" : "/";
   const f = t.footer;
   return (
-    <footer className="pa-footer">
+    <footer className="pa-footer pa-layer">
       <div className="pa-wrap">
         <div className="pa-subscribe" id="stay-connected">
           <div>

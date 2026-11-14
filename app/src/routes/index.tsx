@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useRef } from "react";
+import Lenis from "lenis";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -47,8 +48,29 @@ function useMotion(rootRef: React.RefObject<HTMLDivElement | null>) {
       if (!root) return;
       const mm = gsap.matchMedia();
 
+      // ---- side rail: highlights the section you are in (works with or without motion) ----
+      const railTargets = gsap.utils.toArray<HTMLElement>("[data-rail]", root);
+      const railLinks = gsap.utils.toArray<HTMLAnchorElement>(".pa-rail a", root);
+      const inView = new Set<HTMLElement>();
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => (e.isIntersecting ? inView.add(e.target as HTMLElement) : inView.delete(e.target as HTMLElement)));
+          const cur = [...inView].sort((p, q) => railTargets.indexOf(p) - railTargets.indexOf(q)).pop();
+          railLinks.forEach((l) => l.classList.toggle("is-active", !!cur && l.getAttribute("href") === `#${cur.id}`));
+        },
+        { rootMargin: "-45% 0px -50% 0px" },
+      );
+      railTargets.forEach((s) => io.observe(s));
+
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        // top progress bar + solid header once scrolled
+        // ---- smooth scrolling, driven by GSAP's ticker so ScrollTrigger stays in sync ----
+        const lenis = new Lenis({ lerp: 0.1, smoothWheel: true, anchors: true });
+        lenis.on("scroll", ScrollTrigger.update);
+        const tick = (time: number) => lenis.raf(time * 1000);
+        gsap.ticker.add(tick);
+        gsap.ticker.lagSmoothing(0);
+
+        // ---- top progress bar + solid header once scrolled ----
         gsap.to(".pa-progress", { scaleX: 1, ease: "none", scrollTrigger: { start: 0, end: "max", scrub: 0.3 } });
         ScrollTrigger.create({
           start: 24,
@@ -56,17 +78,70 @@ function useMotion(rootRef: React.RefObject<HTMLDivElement | null>) {
           onToggle: (self) => root.classList.toggle("pa-scrolled", self.isActive),
         });
 
-        // hero entrance: fades and scales only, the words themselves stay put
-        gsap
-          .timeline({ defaults: { ease: "power3.out" } })
+        // ---- intro: counter loader slides away, then the hero builds in (fades and scales only) ----
+        const heroIn = gsap
+          .timeline({ paused: true, defaults: { ease: "power3.out" } })
           .from(".pa-header-in > *", { autoAlpha: 0, duration: 0.8, stagger: 0.08 })
           .from(".pa-eyebrow, .pa-hero h1, .pa-lead", { autoAlpha: 0, duration: 1, stagger: 0.12 }, 0.1)
-          .from(".pa-hero-actions > *", { autoAlpha: 0, scale: 0.9, duration: 0.7, stagger: 0.1 }, "-=0.5");
+          .from(".pa-hero-actions > *", { autoAlpha: 0, scale: 0.9, duration: 0.7, stagger: 0.1 }, "-=0.5")
+          .from(".pa-rail", { autoAlpha: 0, x: 24, duration: 0.8 }, "-=0.4");
+        let started = false;
+        const html = document.documentElement;
+        const begin = () => {
+          if (started) return;
+          started = true;
+          root.classList.remove("pa-loading");
+          html.classList.remove("pa-lock");
+          lenis.start();
+          heroIn.play();
+        };
+        const loader = root.querySelector<HTMLElement>(".pa-loader");
+        let seen = false;
+        try {
+          seen = sessionStorage.getItem("pa-loaded") === "1";
+        } catch {
+          /* storage blocked: just show the loader */
+        }
+        if (loader && !seen) {
+          html.classList.add("pa-lock");
+          lenis.stop();
+          const num = loader.querySelector<HTMLElement>(".pa-loader-n");
+          const bar = loader.querySelector<HTMLElement>(".pa-loader-bar");
+          const counter = { v: 0 };
+          gsap
+            .timeline()
+            .to(counter, {
+              v: 100,
+              duration: 1.5,
+              ease: "power2.inOut",
+              onUpdate: () => {
+                if (num) num.textContent = `${Math.round(counter.v)}%`;
+                if (bar) bar.style.transform = `scaleX(${counter.v / 100})`;
+              },
+            })
+            .to(loader, { yPercent: -100, duration: 0.9, ease: "power4.inOut" }, "+=0.15")
+            .add(() => {
+              loader.style.display = "none";
+              try {
+                sessionStorage.setItem("pa-loaded", "1");
+              } catch {
+                /* ignore */
+              }
+            }, ">")
+            .add(begin, "-=0.35");
+        } else {
+          if (loader) loader.style.display = "none";
+          begin();
+        }
+        const failsafe = window.setTimeout(() => {
+          if (loader) loader.style.display = "none";
+          begin();
+        }, 6000);
 
-        // cards, images and panels rise into view
+        // ---- cards, images and panels rise into view ----
         gsap.set(".pa-reveal", { autoAlpha: 0 });
         ScrollTrigger.batch(".pa-reveal", {
-          start: "top 90%",
+          start: "top 92%",
           once: true,
           onEnter: (els) =>
             gsap.fromTo(
@@ -76,7 +151,14 @@ function useMotion(rootRef: React.RefObject<HTMLDivElement | null>) {
             ),
         });
 
-        // bloom strip parallax
+        // ---- image parallax inside their frames ----
+        gsap.utils.toArray<HTMLElement>(".pa-panel img, .pa-news-card img, .pa-article-img img").forEach((img) => {
+          gsap.fromTo(
+            img,
+            { yPercent: -6 },
+            { yPercent: 6, ease: "none", scrollTrigger: { trigger: img.parentElement, start: "top bottom", end: "bottom top", scrub: true } },
+          );
+        });
         gsap.utils.toArray<HTMLElement>(".pa-strip img").forEach((img, i) => {
           gsap.to(img, {
             yPercent: i % 2 ? 14 : -14,
@@ -84,41 +166,86 @@ function useMotion(rootRef: React.RefObject<HTMLDivElement | null>) {
             scrollTrigger: { trigger: ".pa-strip", start: "top bottom", end: "bottom top", scrub: true },
           });
         });
-
-        // film thumbnail slowly zooms as it crosses the screen
         gsap.fromTo(
           ".pa-video-thumb img",
           { scale: 1.2 },
           { scale: 1, ease: "none", scrollTrigger: { trigger: ".pa-video-thumb", start: "top bottom", end: "bottom 40%", scrub: true } },
         );
+
+        // ---- decorative shapes straddling the seams between sections drift as you scroll ----
+        gsap.utils.toArray<HTMLElement>(".pa-seam").forEach((seam, i) => {
+          gsap.fromTo(
+            seam,
+            { yPercent: 40, rotate: i % 2 ? -20 : 20 },
+            { yPercent: -60, rotate: i % 2 ? 25 : -25, ease: "none", scrollTrigger: { trigger: seam.parentElement, start: "top bottom", end: "top top", scrub: true } },
+          );
+        });
+
+        return () => {
+          window.clearTimeout(failsafe);
+          html.classList.remove("pa-lock");
+          gsap.ticker.remove(tick);
+          lenis.destroy();
+        };
       });
 
-      // resources: pinned horizontal scroll on desktop
+      // ---- desktop: sections slide up OVER the previous one; the covered section stays pinned, shrinks and dims ----
       mm.add("(min-width: 900px) and (prefers-reduced-motion: no-preference)", () => {
-        const section = root.querySelector<HTMLElement>(".pa-hscroll");
+        const layers = gsap.utils.toArray<HTMLElement>(".pa-layer", root);
         const track = root.querySelector<HTMLElement>(".pa-h-track");
-        if (!section || !track) return;
-        section.classList.add("pa-h-on");
-        const dist = () => Math.max(0, track.scrollWidth - window.innerWidth + 80);
-        const art = section.querySelector<HTMLElement>(".pa-hscroll-bg img");
-        const tl = gsap.timeline({
-          defaults: { ease: "none" },
-          scrollTrigger: {
-            trigger: section,
-            start: "top top",
-            end: () => `+=${dist()}`,
+        layers.forEach((el, i) => {
+          const next = layers[i + 1];
+
+          // resources: pinned horizontal scroll
+          if (el.classList.contains("pa-hscroll") && track) {
+            el.classList.add("pa-h-on");
+            const dist = () => Math.max(0, track.scrollWidth - window.innerWidth + 80);
+            const art = el.querySelector<HTMLElement>(".pa-hscroll-bg img");
+            const tl = gsap.timeline({
+              defaults: { ease: "none" },
+              scrollTrigger: {
+                trigger: el,
+                start: "top top",
+                end: () => `+=${dist()}`,
+                pin: true,
+                scrub: 0.8,
+                anticipatePin: 1,
+                invalidateOnRefresh: true,
+              },
+            });
+            tl.to(track, { x: () => -dist() }, 0);
+            if (art) tl.to(art, { xPercent: -8, scale: 1.08 }, 0);
+            return;
+          }
+
+          if (!next) return;
+          ScrollTrigger.create({
+            trigger: el,
+            start: () => (el.offsetHeight > window.innerHeight ? "bottom bottom" : "top top"),
+            end: () => `+=${window.innerHeight}`,
             pin: true,
-            scrub: 0.8,
+            pinSpacing: false,
             anticipatePin: 1,
             invalidateOnRefresh: true,
-          },
+          });
+          gsap.fromTo(
+            el,
+            { "--s": 1, "--cover": 0 },
+            {
+              "--s": 0.94,
+              "--cover": 0.55,
+              ease: "none",
+              scrollTrigger: { trigger: next, start: "top bottom", end: "top top", scrub: true },
+            },
+          );
         });
-        tl.to(track, { x: () => -dist() }, 0);
-        if (art) tl.to(art, { xPercent: -8, scale: 1.08 }, 0);
-        return () => section.classList.remove("pa-h-on");
+        return () => root.querySelector(".pa-hscroll")?.classList.remove("pa-h-on");
       });
 
-      return () => mm.revert();
+      return () => {
+        io.disconnect();
+        mm.revert();
+      };
     },
     { scope: rootRef },
   );
@@ -141,8 +268,31 @@ function Page() {
   const panelImages = ["/assets/img/bloom-5.webp", "/assets/img/together.webp"];
 
   return (
-    <div className="pa-root" ref={rootRef}>
+    <div className="pa-root pa-loading" ref={rootRef}>
+      <div className="pa-loader" aria-hidden="true">
+        <div className="pa-loader-in">
+          <img src="/assets/img/logo.png" alt="" width={236} height={60} />
+          <span className="pa-loader-n">0%</span>
+          <span className="pa-loader-bar" />
+        </div>
+      </div>
+      <nav className="pa-rail" aria-label={t.mainNav}>
+        {[
+          ["top", t.nav.home],
+          ["autism-info", t.nav.info],
+          ["resources", t.nav.resources],
+          ["ebooks", t.nav.ebooks],
+          ["news", t.nav.news],
+          ["neurodiversity", t.nav.neuro],
+          ["about", t.nav.about],
+        ].map(([id, label]) => (
+          <a key={id} href={`#${id}`} aria-label={label}>
+            <span>{label}</span>
+          </a>
+        ))}
+      </nav>
       <div className="pa-progress" aria-hidden="true" />
+
       <a className="pa-skip" href="#main">
         {t.skip}
       </a>
@@ -150,7 +300,7 @@ function Page() {
       <SiteHeader home />
 
       <main id="main">
-        <section className="pa-hero" id="top">
+        <section className="pa-hero pa-layer" id="top" data-rail>
           <HeroScene />
           <div className="pa-wrap pa-hero-grid">
             <div>
@@ -176,7 +326,8 @@ function Page() {
           </div>
         </section>
 
-        <section className="pa-section" id="autism-info">
+        <section className="pa-section pa-layer" id="autism-info" data-rail>
+          <span className="pa-seam pa-seam-a" aria-hidden="true" />
           <div className="pa-wrap">
             <h2 className="pa-h2">{t.info.h2}</h2>
             <p className="pa-sub">{t.info.sub}</p>
@@ -207,7 +358,8 @@ function Page() {
           </div>
         </section>
 
-        <section className="pa-section" id="audience">
+        <section className="pa-section pa-layer" id="audience">
+          <span className="pa-seam pa-seam-b" aria-hidden="true" />
           <div className="pa-wrap">
             <h2 className="pa-h2">{t.audience.h2}</h2>
             <p className="pa-sub">{t.audience.sub}</p>
@@ -243,7 +395,7 @@ function Page() {
           </div>
         </section>
 
-        <section className="pa-hscroll" id="resources">
+        <section className="pa-hscroll pa-layer" id="resources" data-rail>
           <div className="pa-hscroll-bg" aria-hidden="true">
             <img src="/assets/img/hero.webp" alt="" loading="lazy" />
           </div>
@@ -271,7 +423,8 @@ function Page() {
           </div>
         </section>
 
-        <section className="pa-section pa-ebooks" id="ebooks">
+        <section className="pa-section pa-ebooks pa-layer" id="ebooks" data-rail>
+          <span className="pa-seam pa-seam-c" aria-hidden="true" />
           <div className="pa-wrap">
             <h2 className="pa-h2">{t.ebooks.h2}</h2>
             <p className="pa-sub">{t.ebooks.sub}</p>
@@ -315,7 +468,8 @@ function Page() {
           </div>
         </section>
 
-        <section className="pa-section" id="film">
+        <section className="pa-section pa-layer" id="film">
+          <span className="pa-seam pa-seam-a" aria-hidden="true" />
           <div className="pa-wrap pa-video">
             <a className="pa-video-thumb pa-reveal" href={LINKS.film} aria-label={t.film.label}>
               <img src="/assets/img/video.webp" alt={t.film.alt} />
@@ -331,7 +485,8 @@ function Page() {
           </div>
         </section>
 
-        <section className="pa-section pa-news" id="news">
+        <section className="pa-section pa-news pa-layer" id="news" data-rail>
+          <span className="pa-seam pa-seam-b" aria-hidden="true" />
           <div className="pa-wrap">
             <h2 className="pa-h2">{t.news.h2}</h2>
             <p className="pa-sub">{t.news.sub}</p>
@@ -350,7 +505,8 @@ function Page() {
           </div>
         </section>
 
-        <section className="pa-section" id="neurodiversity">
+        <section className="pa-section pa-layer" id="neurodiversity" data-rail>
+          <span className="pa-seam pa-seam-c" aria-hidden="true" />
           <div className="pa-wrap pa-neuro">
             <div className="pa-neuro-card pa-reveal">
               <h2 className="pa-h2">{t.neuro.h2}</h2>
@@ -367,7 +523,8 @@ function Page() {
           </div>
         </section>
 
-        <section className="pa-section pa-about" id="about">
+        <section className="pa-section pa-about pa-layer" id="about" data-rail>
+          <span className="pa-seam pa-seam-a" aria-hidden="true" />
           <div className="pa-wrap pa-about-grid">
             <div className="pa-about-copy">
               <h2 className="pa-h2">{t.about.h2}</h2>
@@ -386,7 +543,8 @@ function Page() {
           </div>
         </section>
 
-        <section className="pa-section" id="community">
+        <section className="pa-section pa-layer" id="community">
+          <span className="pa-seam pa-seam-b" aria-hidden="true" />
           <div className="pa-wrap pa-community">
             <div>
               <h2 className="pa-h2">{t.community.h2}</h2>

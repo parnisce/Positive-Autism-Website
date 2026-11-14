@@ -33,6 +33,7 @@ const en = {
   toDark: "Switch to dark theme",
   toLight: "Switch to light theme",
   nav: {
+    home: "Home",
     info: "Autism Info",
     resources: "Resources",
     ebooks: "Ebooks",
@@ -262,6 +263,7 @@ const es: Copy = {
   toDark: "Cambiar al tema oscuro",
   toLight: "Cambiar al tema claro",
   nav: {
+    home: "Inicio",
     info: "Info sobre autismo",
     resources: "Recursos",
     ebooks: "Ebooks",
