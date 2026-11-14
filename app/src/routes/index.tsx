@@ -14,7 +14,7 @@ import { SiteFooter, SiteHeader } from "../components/pa/SiteChrome";
 import Magnet from "../components/react-bits/Magnet";
 import SpotlightCard from "../components/react-bits/SpotlightCard";
 import TiltedCard from "../components/react-bits/TiltedCard";
-import { EBOOKS } from "../ebooks";
+import { FEATURED } from "../shop/featured";
 import { ARTICLE_IMAGES, LINKS } from "../i18n";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -319,7 +319,7 @@ function Page() {
                   </a>
                 </Magnet>
                 <Magnet padding={60} magnetStrength={3}>
-                  <a className="pa-btn-news" href="#ebooks">
+                  <a className="pa-btn-news" href="/shop">
                     {t.hero.browse}
                   </a>
                 </Magnet>
@@ -431,41 +431,38 @@ function Page() {
             <h2 className="pa-h2">{t.ebooks.h2}</h2>
             <p className="pa-sub">{t.ebooks.sub}</p>
             <div className="pa-book-row">
-              {EBOOKS.map((b) => {
-                const copy = t.ebooks.items[b.slug];
-                return (
-                  <article key={b.slug} className="pa-book pa-reveal">
-                    <div className="pa-book-cover">
-                      <TiltedCard
-                        imageSrc={b.cover}
-                        altText={`${t.ebooks.coverAlt} ${copy.title}`}
-                        containerWidth="100%"
-                        containerHeight="100%"
-                        imageWidth="100%"
-                        imageHeight="100%"
-                        radius={14}
-                        rotateAmplitude={14}
-                        scaleOnHover={1.06}
-                        glare={0.3}
-                        shadow={0.6}
-                        overlayContent={
-                          <span className="pa-book-title">
-                            <small>{copy.audience}</small>
-                            {copy.title}
-                          </span>
-                        }
-                        displayOverlayContent
-                      />
-                    </div>
-                    <p>{copy.blurb}</p>
-                    <Magnet padding={50} magnetStrength={4}>
-                      <a className="pa-btn-buy" href={b.checkoutUrl ?? LINKS.subscribe}>
-                        {b.checkoutUrl ? `${t.ebooks.buy}${b.price ? ` · ${b.price}` : ""}` : t.ebooks.notify}
-                      </a>
-                    </Magnet>
-                  </article>
-                );
-              })}
+              {FEATURED.map((b) => (
+                <article key={b.id} className="pa-book pa-reveal">
+                  <div className="pa-book-cover">
+                    <TiltedCard
+                      imageSrc={b.img}
+                      altText={b.title}
+                      containerWidth="100%"
+                      containerHeight="100%"
+                      imageWidth="100%"
+                      imageHeight="100%"
+                      radius={14}
+                      rotateAmplitude={14}
+                      scaleOnHover={1.06}
+                      glare={0.3}
+                      shadow={0.6}
+                    />
+                  </div>
+                  <h3 className="pa-book-name">{b.title}</h3>
+                  <Magnet padding={50} magnetStrength={4}>
+                    <a className="pa-btn-buy" href={`/shop?q=${encodeURIComponent(b.query)}`}>
+                      {t.ebooks.view}
+                    </a>
+                  </Magnet>
+                </article>
+              ))}
+            </div>
+            <div className="pa-book-all">
+              <Magnet padding={50} magnetStrength={4}>
+                <a className="pa-btn-explore" href="/shop">
+                  {t.ebooks.viewAll}
+                </a>
+              </Magnet>
             </div>
           </div>
         </section>

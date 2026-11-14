@@ -132,27 +132,10 @@ const en = {
   },
   ebooks: {
     h2: "Autism learning ebooks",
-    sub: "Guides you can keep, print and come back to. Download instantly and learn at your own pace.",
+    sub: "Worksheets and reading activities you can print and use again and again. Browse the full shop to search by topic or price.",
     coverAlt: "Cover of the ebook",
-    notify: "Get notified",
-    buy: "Buy ebook",
-    items: {
-      "learning-at-home": {
-        title: "Learning at Home",
-        audience: "For parents",
-        blurb: "Gentle, step-by-step ideas for building skills with your child.",
-      },
-      "communication-guide": {
-        title: "Communication Guide",
-        audience: "For everyone",
-        blurb: "Practical activities that support language and conversation.",
-      },
-      "my-strengths": {
-        title: "My Strengths",
-        audience: "For autistic people",
-        blurb: "A workbook for understanding your strengths, needs and goals.",
-      },
-    } as Record<string, { title: string; audience: string; blurb: string }>,
+    view: "View in shop",
+    viewAll: "Browse all ebooks",
   },
   film: {
     h2: "Accepted As I Am",
@@ -362,27 +345,10 @@ const es: Copy = {
   },
   ebooks: {
     h2: "Ebooks de aprendizaje sobre autismo",
-    sub: "Guías que puedes guardar, imprimir y consultar cuando quieras. Descárgalas al instante y aprende a tu ritmo.",
+    sub: "Hojas de trabajo y actividades de lectura que puedes imprimir y usar una y otra vez. Explora toda la tienda para buscar por tema o precio.",
     coverAlt: "Portada del ebook",
-    notify: "Avísame",
-    buy: "Comprar ebook",
-    items: {
-      "learning-at-home": {
-        title: "Aprender en casa",
-        audience: "Para familias",
-        blurb: "Ideas amables, paso a paso, para desarrollar habilidades con tu hijo o hija.",
-      },
-      "communication-guide": {
-        title: "Guía de comunicación",
-        audience: "Para todos",
-        blurb: "Actividades prácticas que apoyan el lenguaje y la conversación.",
-      },
-      "my-strengths": {
-        title: "Mis fortalezas",
-        audience: "Para personas autistas",
-        blurb: "Un cuaderno de trabajo para conocer tus fortalezas, necesidades y metas.",
-      },
-    },
+    view: "Ver en la tienda",
+    viewAll: "Ver todos los ebooks",
   },
   film: {
     h2: "Accepted As I Am",

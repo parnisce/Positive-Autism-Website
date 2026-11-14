@@ -13,9 +13,13 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as ShopRouteImport } from './routes/shop'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsAndConditionsRouteImport } from './routes/terms-and-conditions'
 import { Route as UserDataManagementRouteImport } from './routes/user-data-management'
+import { Route as ApiCheckoutRouteImport } from './routes/api.checkout'
+import { Route as ApiCheckoutStatusRouteImport } from './routes/api.checkout-status'
+import { Route as ShopSuccessRouteImport } from './routes/shop_.success'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -37,6 +41,11 @@ const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   path: '/robots.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShopRoute = ShopRouteImport.update({
+  id: '/shop',
+  path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -52,24 +61,47 @@ const UserDataManagementRoute = UserDataManagementRouteImport.update({
   path: '/user-data-management',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCheckoutRoute = ApiCheckoutRouteImport.update({
+  id: '/api/checkout',
+  path: '/api/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCheckoutStatusRoute = ApiCheckoutStatusRouteImport.update({
+  id: '/api/checkout-status',
+  path: '/api/checkout-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShopSuccessRoute = ShopSuccessRouteImport.update({
+  id: '/shop_/success',
+  path: '/shop/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/user-data-management': typeof UserDataManagementRoute
+  '/api/checkout': typeof ApiCheckoutRoute
+  '/api/checkout-status': typeof ApiCheckoutStatusRoute
+  '/shop/success': typeof ShopSuccessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app': typeof AppRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/user-data-management': typeof UserDataManagementRoute
+  '/api/checkout': typeof ApiCheckoutRoute
+  '/api/checkout-status': typeof ApiCheckoutStatusRoute
+  '/shop/success': typeof ShopSuccessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,9 +109,13 @@ export interface FileRoutesById {
   '/app': typeof AppRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/user-data-management': typeof UserDataManagementRoute
+  '/api/checkout': typeof ApiCheckoutRoute
+  '/api/checkout-status': typeof ApiCheckoutStatusRoute
+  '/shop_/success': typeof ShopSuccessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -88,27 +124,39 @@ export interface FileRouteTypes {
     | '/app'
     | '/privacy-policy'
     | '/robots.txt'
+    | '/shop'
     | '/sitemap.xml'
     | '/terms-and-conditions'
     | '/user-data-management'
+    | '/api/checkout'
+    | '/api/checkout-status'
+    | '/shop/success'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/app'
     | '/privacy-policy'
     | '/robots.txt'
+    | '/shop'
     | '/sitemap.xml'
     | '/terms-and-conditions'
     | '/user-data-management'
+    | '/api/checkout'
+    | '/api/checkout-status'
+    | '/shop/success'
   id:
     | '__root__'
     | '/'
     | '/app'
     | '/privacy-policy'
     | '/robots.txt'
+    | '/shop'
     | '/sitemap.xml'
     | '/terms-and-conditions'
     | '/user-data-management'
+    | '/api/checkout'
+    | '/api/checkout-status'
+    | '/shop_/success'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -116,9 +164,13 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
+  ShopRoute: typeof ShopRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsAndConditionsRoute: typeof TermsAndConditionsRoute
   UserDataManagementRoute: typeof UserDataManagementRoute
+  ApiCheckoutRoute: typeof ApiCheckoutRoute
+  ApiCheckoutStatusRoute: typeof ApiCheckoutStatusRoute
+  ShopSuccessRoute: typeof ShopSuccessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -151,6 +203,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RobotsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shop': {
+      id: '/shop'
+      path: '/shop'
+      fullPath: '/shop'
+      preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -172,6 +231,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserDataManagementRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/checkout': {
+      id: '/api/checkout'
+      path: '/api/checkout'
+      fullPath: '/api/checkout'
+      preLoaderRoute: typeof ApiCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/checkout-status': {
+      id: '/api/checkout-status'
+      path: '/api/checkout-status'
+      fullPath: '/api/checkout-status'
+      preLoaderRoute: typeof ApiCheckoutStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shop_/success': {
+      id: '/shop_/success'
+      path: '/shop/success'
+      fullPath: '/shop/success'
+      preLoaderRoute: typeof ShopSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -180,9 +260,13 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
+  ShopRoute: ShopRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsAndConditionsRoute: TermsAndConditionsRoute,
   UserDataManagementRoute: UserDataManagementRoute,
+  ApiCheckoutRoute: ApiCheckoutRoute,
+  ApiCheckoutStatusRoute: ApiCheckoutStatusRoute,
+  ShopSuccessRoute: ShopSuccessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -16,7 +16,7 @@ export function SiteHeader({ home = false }: { home?: boolean }) {
   const nav = [
     { href: `${base}#autism-info`, label: t.nav.info },
     { href: `${base}#resources`, label: t.nav.resources },
-    { href: `${base}#ebooks`, label: t.nav.ebooks },
+    { href: "/shop", label: t.nav.ebooks },
     { href: `${base}#news`, label: t.nav.news },
     { href: `${base}#neurodiversity`, label: t.nav.neuro },
     { href: `${base}#about`, label: t.nav.about },
@@ -36,7 +36,7 @@ export function SiteHeader({ home = false }: { home?: boolean }) {
         </nav>
         <div className="pa-header-right">
           <Controls />
-          <a className="pa-contact-btn" href={`${base}#ebooks`}>
+          <a className="pa-contact-btn" href="/shop">
             {t.shop}
           </a>
         </div>
@@ -48,7 +48,7 @@ export function SiteHeader({ home = false }: { home?: boolean }) {
                 {n.label}
               </a>
             ))}
-            <a href={`${base}#ebooks`} onClick={closeMenu}>
+            <a href="/shop" onClick={closeMenu}>
               {t.shop}
             </a>
             <Controls className="pa-menu-ctrl" />
@@ -84,7 +84,7 @@ export function SiteFooter({ home = false }: { home?: boolean }) {
             <ul>
               <li><a href={`${base}#autism-info`}>{t.nav.info}</a></li>
               <li><a href={`${base}#resources`}>{t.nav.resources}</a></li>
-              <li><a href={`${base}#ebooks`}>{t.nav.ebooks}</a></li>
+              <li><a href="/shop">{t.nav.ebooks}</a></li>
               <li><a href={`${base}#news`}>{t.nav.news}</a></li>
             </ul>
           </div>
