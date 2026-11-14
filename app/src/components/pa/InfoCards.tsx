@@ -5,6 +5,16 @@ import { usePrefs } from "./prefs";
 
 type Point = { title: string; text: string };
 
+/** Illustration behind each card (same order as the copy). */
+const BGS = [
+  "/assets/img/bloom-5.webp",
+  "/assets/img/bloom-2.webp",
+  "/assets/img/bloom-4.webp",
+  "/assets/img/bloom-3.webp",
+  "/assets/img/bloom-6.webp",
+  "/assets/img/bloom-1.webp",
+];
+
 const svg = (children: ReactNode) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     {children}
@@ -96,8 +106,9 @@ function InfoCard({ point, index, id }: { point: Point; index: number; id: strin
           spotlightColor="var(--pa-orange)"
           intensity={0.55}
           spotlightSize={260}
-          style={{ "--spotlight-card-surface": "var(--pa-surface)" } as CSSProperties}
+          style={{ "--spotlight-card-surface": "var(--pa-tint)" } as CSSProperties}
         >
+          <img className="pa-point-bg" src={BGS[index]} alt="" aria-hidden="true" loading="lazy" />
           <button
             type="button"
             className="pa-point-btn"
