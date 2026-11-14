@@ -14,7 +14,7 @@ import { SiteFooter, SiteHeader } from "../components/pa/SiteChrome";
 import Magnet from "../components/react-bits/Magnet";
 import SpotlightCard from "../components/react-bits/SpotlightCard";
 import TiltedCard from "../components/react-bits/TiltedCard";
-import { FEATURED } from "../shop/featured";
+import { FEATURED, FEATURED_TOPICS, SHOP_STATS } from "../shop/featured";
 import { ARTICLE_IMAGES, LINKS } from "../i18n";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -134,6 +134,23 @@ function useMotion(rootRef: React.RefObject<HTMLDivElement | null>) {
               { autoAlpha: 0, y: 56, scale: 0.96 },
               { autoAlpha: 1, y: 0, scale: 1, duration: 0.9, ease: "power3.out", stagger: 0.12, overwrite: true },
             ),
+        });
+
+        // ---- stat numbers count up when they scroll into view ----
+        gsap.utils.toArray<HTMLElement>(".pa-eb-num").forEach((el) => {
+          const target = Number(el.dataset.count);
+          const suffix = el.dataset.suffix ?? "";
+          const o = { v: 0 };
+          el.textContent = `0${suffix}`;
+          gsap.to(o, {
+            v: target,
+            duration: 1.8,
+            ease: "power2.out",
+            onUpdate: () => {
+              el.textContent = `${Math.round(o.v)}${suffix}`;
+            },
+            scrollTrigger: { trigger: el, start: "top 92%", once: true },
+          });
         });
 
         // ---- image parallax inside their frames ----
@@ -396,43 +413,58 @@ function Page() {
 
         <section className="pa-section pa-ebooks pa-layer" id="ebooks">
           <span className="pa-seam pa-seam-c" aria-hidden="true" />
-          <div className="pa-wrap">
+          <div className="pa-wrap pa-eb-head">
             <h2 className="pa-h2">{t.ebooks.h2}</h2>
             <p className="pa-sub">{t.ebooks.sub}</p>
-            <div className="pa-book-row">
-              {FEATURED.map((b) => (
-                <article key={b.id} className="pa-book pa-reveal">
-                  <div className="pa-book-cover">
-                    <TiltedCard
-                      imageSrc={b.img}
-                      altText={b.title}
-                      containerWidth="100%"
-                      containerHeight="100%"
-                      imageWidth="100%"
-                      imageHeight="100%"
-                      radius={14}
-                      rotateAmplitude={14}
-                      scaleOnHover={1.06}
-                      glare={0.3}
-                      shadow={0.6}
-                    />
-                  </div>
-                  <h3 className="pa-book-name">{b.title}</h3>
-                  <Magnet padding={50} magnetStrength={4}>
-                    <a className="pa-btn-buy" href={`/shop?q=${encodeURIComponent(b.query)}`}>
-                      {t.ebooks.view}
-                    </a>
-                  </Magnet>
-                </article>
+            <ul className="pa-eb-topics" aria-label={t.ebooks.topicsLabel}>
+              {FEATURED_TOPICS.map((tp) => (
+                <li key={tp.slug}>
+                  <a href={`/shop?cat=${tp.slug}`}>{tp.name}</a>
+                </li>
               ))}
+            </ul>
+          </div>
+
+          <div className="pa-eb-marquee">
+            <div className="pa-eb-track">
+              {[0, 1].map((copy) =>
+                FEATURED.map((b) => (
+                  <a
+                    key={`${copy}-${b.id}`}
+                    className="pa-eb-card"
+                    href={`/shop/ebook/${b.slug}`}
+                    aria-label={b.title}
+                    aria-hidden={copy === 1}
+                    tabIndex={copy === 1 ? -1 : 0}
+                  >
+                    <img src={b.img} alt={copy === 1 ? "" : b.title} width={300} height={300} loading="lazy" />
+                    <span>{b.title}</span>
+                  </a>
+                )),
+              )}
             </div>
-            <div className="pa-book-all">
-              <Magnet padding={50} magnetStrength={4}>
-                <a className="pa-btn-explore" href="/shop">
-                  {t.ebooks.viewAll}
-                </a>
-              </Magnet>
+          </div>
+
+          <div className="pa-wrap pa-eb-foot">
+            <div className="pa-eb-stats">
+              <div className="pa-reveal">
+                <b className="pa-eb-num" data-count={SHOP_STATS.ebooks} data-suffix="+">
+                  {SHOP_STATS.ebooks}+
+                </b>
+                <span>{t.ebooks.statEbooks}</span>
+              </div>
+              <div className="pa-reveal">
+                <b className="pa-eb-num" data-count={SHOP_STATS.topics}>
+                  {SHOP_STATS.topics}
+                </b>
+                <span>{t.ebooks.statTopics}</span>
+              </div>
             </div>
+            <Magnet padding={60} magnetStrength={3}>
+              <a className="pa-eb-cta" href="/shop">
+                {t.ebooks.viewAll}
+              </a>
+            </Magnet>
           </div>
         </section>
 

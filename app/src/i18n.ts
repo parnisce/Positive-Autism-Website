@@ -132,9 +132,10 @@ const en = {
   },
   ebooks: {
     h2: "Autism learning ebooks",
-    sub: "Worksheets and reading activities you can print and use again and again. Browse the full shop to search by topic or price.",
-    coverAlt: "Cover of the ebook",
-    view: "View in shop",
+    sub: "Worksheets and reading activities for autistic children and young people, organized by the skill you want to build.",
+    topicsLabel: "Popular topics",
+    statEbooks: "Ebooks",
+    statTopics: "Topics",
     viewAll: "Browse all ebooks",
   },
   film: {
@@ -345,9 +346,10 @@ const es: Copy = {
   },
   ebooks: {
     h2: "Ebooks de aprendizaje sobre autismo",
-    sub: "Hojas de trabajo y actividades de lectura que puedes imprimir y usar una y otra vez. Explora toda la tienda para buscar por tema o precio.",
-    coverAlt: "Portada del ebook",
-    view: "Ver en la tienda",
+    sub: "Hojas de trabajo y actividades de lectura para niños y jóvenes autistas, organizadas por la habilidad que quieres desarrollar.",
+    topicsLabel: "Temas populares",
+    statEbooks: "Ebooks",
+    statTopics: "Temas",
     viewAll: "Ver todos los ebooks",
   },
   film: {
