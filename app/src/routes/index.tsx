@@ -99,9 +99,9 @@ function useMotion(rootRef: React.RefObject<HTMLDivElement | null>) {
         if (!section || !track) return;
         section.classList.add("pa-h-on");
         const dist = () => Math.max(0, track.scrollWidth - window.innerWidth + 80);
-        gsap.to(track, {
-          x: () => -dist(),
-          ease: "none",
+        const art = section.querySelector<HTMLElement>(".pa-hscroll-bg img");
+        const tl = gsap.timeline({
+          defaults: { ease: "none" },
           scrollTrigger: {
             trigger: section,
             start: "top top",
@@ -112,6 +112,8 @@ function useMotion(rootRef: React.RefObject<HTMLDivElement | null>) {
             invalidateOnRefresh: true,
           },
         });
+        tl.to(track, { x: () => -dist() }, 0);
+        if (art) tl.to(art, { xPercent: -8, scale: 1.08 }, 0);
         return () => section.classList.remove("pa-h-on");
       });
 
@@ -287,6 +289,9 @@ function Page() {
         </section>
 
         <section className="pa-hscroll" id="resources">
+          <div className="pa-hscroll-bg" aria-hidden="true">
+            <img src="/assets/img/hero.webp" alt="" loading="lazy" />
+          </div>
           <div className="pa-wrap pa-h-head">
             <h2 className="pa-h2">{t.resources.h2}</h2>
             <p className="pa-sub">{t.resources.sub}</p>

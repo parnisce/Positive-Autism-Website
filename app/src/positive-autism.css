@@ -205,6 +205,12 @@
 
 /* resources: pinned horizontal scroll (desktop) */
 .pa-hscroll { background: var(--pa-surface); border-block: 1px solid var(--pa-line); padding: 88px 0; }
+/* soft illustration behind the resource cards */
+.pa-hscroll { position: relative; overflow: hidden; isolation: isolate; }
+.pa-hscroll > .pa-wrap, .pa-hscroll > .pa-h-viewport { position: relative; z-index: 1; }
+.pa-hscroll-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .17; -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%); mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%); }
+.pa-hscroll-bg img { position: absolute; left: 0; top: 0; width: 125%; height: 100%; max-width: none; object-fit: cover; object-position: center 35%; filter: saturate(.85) blur(1.5px); will-change: transform; }
+:root[data-theme="dark"] .pa-hscroll-bg { opacity: .11; }
 .pa-h-viewport { padding-inline: clamp(20px, 3.4vw, 48px); }
 .pa-h-track { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 .pa-res-card { min-height: 260px; display: flex; flex-direction: column; justify-content: space-between; gap: 18px; padding: 28px !important; border: 1px solid var(--pa-line); }
