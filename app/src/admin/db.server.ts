@@ -49,7 +49,7 @@ export async function getDb(): Promise<Db | null> {
       /* not inside Workers */
     }
   }
-  if (!db && g.process?.env?.PA_DEV_DB) {
+  if (import.meta.env.DEV && !db && g.process?.env?.PA_DEV_DB) {
     const path = "./devdb.server";
     devInstance ??= ((await import(/* @vite-ignore */ path)) as { devDb: (f: string) => Db }).devDb(g.process.env.PA_DEV_DB);
     db = devInstance;
