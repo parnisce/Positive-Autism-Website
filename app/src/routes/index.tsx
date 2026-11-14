@@ -7,6 +7,7 @@ import { useGSAP } from "@gsap/react";
 import "../positive-autism.css";
 import { Controls } from "../components/pa/Controls";
 import { HeroScene } from "../components/pa/HeroScene";
+import { InfoCards } from "../components/pa/InfoCards";
 import { PrefsProvider, usePrefs } from "../components/pa/prefs";
 import { SubscribeForm } from "../components/pa/SubscribeForm";
 import Magnet from "../components/react-bits/Magnet";
@@ -230,15 +231,7 @@ function Page() {
                   {t.info.leadLink}
                 </a>
               </div>
-              <div className="pa-points">
-                {t.info.points.map((p, i) => (
-                  <article key={p.title} className="pa-point pa-reveal">
-                    <span className="pa-point-n">{String(i + 1).padStart(2, "0")}</span>
-                    <h4>{p.title}</h4>
-                    <p>{p.text}</p>
-                  </article>
-                ))}
-              </div>
+              <InfoCards points={t.info.points} />
             </div>
             <div className="pa-articles">
               <h3>{t.info.articlesTitle}</h3>

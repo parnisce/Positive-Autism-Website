@@ -118,11 +118,6 @@
 .pa-info-lead p { margin: 0; font-size: 18px; }
 .pa-info-lead .pa-more { color: var(--pa-white) !important; border-color: var(--pa-gold); justify-self: start; }
 .pa-points { display: grid; gap: 16px; grid-template-columns: 1fr; }
-.pa-point { background: var(--pa-surface); border: 1px solid var(--pa-line); border-radius: 18px; padding: 22px; display: grid; gap: 8px; align-content: start; transition: transform .25s, box-shadow .25s; }
-.pa-point:hover { transform: translateY(-4px); box-shadow: 0 20px 36px -22px rgba(0, 0, 0, .4); }
-.pa-point-n { font-weight: 700; font-size: 15px; letter-spacing: .1em; color: var(--pa-orange-deep); }
-.pa-point h4 { margin: 0; font-size: 20px; line-height: 1.2; }
-.pa-point p { margin: 0; color: var(--pa-muted); font-size: 16px; }
 .pa-articles { margin-top: 48px; }
 .pa-articles h3 { margin: 0 0 16px; font-size: 26px; letter-spacing: -0.01em; }
 .pa-article-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0 48px; }
@@ -132,6 +127,56 @@
 .pa-article-list span { font-size: 18px; font-weight: 500; line-height: 1.35; }
 @media (min-width: 640px) { .pa-points { grid-template-columns: 1fr 1fr; } }
 @media (min-width: 1100px) { .pa-info-grid { grid-template-columns: 1fr 1.7fr; } .pa-points { grid-template-columns: repeat(3, 1fr); } .pa-article-list { grid-template-columns: 1fr 1fr; } }
+
+/* interactive info cards */
+.pa-point { perspective: 900px; }
+.pa-point-tilt { height: 100%; transform-style: preserve-3d; will-change: transform; }
+.pa-point-in.spotlight-card { height: 100%; min-height: 250px; padding: 0 !important; border: 1px solid var(--pa-line); border-radius: 22px; transition: box-shadow .3s, border-color .3s; }
+.pa-point-in:hover, .pa-point-in:focus-within, .pa-point-in.is-open { box-shadow: 0 26px 44px -24px rgba(0, 0, 0, .55); border-color: var(--pa-teal-soft); }
+.pa-point-btn { all: unset; box-sizing: border-box; position: relative; display: grid; grid-template-rows: auto 1fr auto; gap: 16px; width: 100%; height: 100%; min-height: 250px; padding: 22px; cursor: pointer; border-radius: inherit; }
+.pa-point-btn:focus-visible { outline: 3px solid var(--pa-orange-deep); outline-offset: -6px; }
+.pa-point-top { display: flex; align-items: center; justify-content: space-between; }
+.pa-ic { width: 56px; height: 56px; display: grid; place-items: center; border-radius: 18px; background: color-mix(in srgb, var(--pa-teal) 14%, transparent); color: var(--pa-teal-text); transition: transform .4s cubic-bezier(.2, .9, .3, 1.4), background .3s, color .3s; }
+.pa-ic svg { width: 30px; height: 30px; overflow: visible; }
+.pa-point-in:hover .pa-ic, .pa-point-in:focus-within .pa-ic, .pa-point-in.is-open .pa-ic { transform: scale(1.12) rotate(-6deg); background: var(--pa-orange); color: var(--pa-navy); }
+.pa-point-n { font-weight: 700; font-size: 15px; letter-spacing: .1em; color: var(--pa-orange-deep); }
+.pa-point-title { align-self: end; font-size: 21px; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; color: var(--pa-text); padding-right: 36px; }
+.pa-point-plus { position: absolute; right: 22px; bottom: 22px; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--pa-line); transition: transform .35s, background .3s, border-color .3s; }
+.pa-point-plus::before, .pa-point-plus::after { content: ""; position: absolute; left: 50%; top: 50%; width: 12px; height: 2px; background: var(--pa-text); border-radius: 2px; transform: translate(-50%, -50%); }
+.pa-point-plus::after { transform: translate(-50%, -50%) rotate(90deg); }
+.pa-point-in:hover .pa-point-plus, .pa-point-in.is-open .pa-point-plus { transform: rotate(135deg); background: var(--pa-orange); border-color: var(--pa-orange); }
+.pa-point-in:hover .pa-point-plus::before, .pa-point-in:hover .pa-point-plus::after, .pa-point-in.is-open .pa-point-plus::before, .pa-point-in.is-open .pa-point-plus::after { background: var(--pa-navy); }
+
+/* text panel slides up over the card (no layout shift) */
+.pa-point-text { position: absolute; inset: 0; z-index: 2; display: grid; align-content: end; gap: 10px; padding: 26px 22px; border-radius: inherit; background: linear-gradient(160deg, var(--pa-teal), #0e5a61); color: var(--pa-white); opacity: 0; visibility: hidden; transform: translateY(24px); transition: opacity .35s ease, transform .45s cubic-bezier(.2, .8, .2, 1), visibility 0s linear .45s; pointer-events: none; }
+.pa-point-text-title { font-size: 21px; font-weight: 700; line-height: 1.2; color: var(--pa-gold); }
+.pa-point-text p { margin: 0; font-size: 17px; line-height: 1.55; }
+.pa-point-in:hover .pa-point-text, .pa-point-in:focus-within .pa-point-text, .pa-point-in.is-open .pa-point-text { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+/* the button stays clickable over the panel so a tap or click toggles it */
+.pa-point-in .pa-point-btn { z-index: 3; }
+.pa-point-in:hover .pa-point-title, .pa-point-in:focus-within .pa-point-title, .pa-point-in.is-open .pa-point-title { opacity: 0; }
+.pa-point-in:hover .pa-point-n, .pa-point-in.is-open .pa-point-n { color: var(--pa-gold); }
+
+/* icon animations while a card is active */
+@keyframes pa-bob { 50% { transform: translateY(-2px); } }
+@keyframes pa-spin { to { transform: rotate(360deg); } }
+@keyframes pa-beat { 50% { transform: scale(1.14); } }
+@keyframes pa-wave { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@keyframes pa-glow { 50% { fill: var(--pa-gold); stroke: var(--pa-navy); } }
+@keyframes pa-grow { 0%, 100% { transform: scaleY(.45); } 50% { transform: scaleY(1); } }
+.pa-ic-spin { transform-origin: 12px 12px; }
+.pa-ic-star { transform-origin: 12px 12px; }
+.pa-ic-bar1, .pa-ic-bar2, .pa-ic-bar3 { transform-origin: bottom; transform-box: fill-box; }
+.pa-point-in:hover .pa-ic-a, .pa-point-in.is-open .pa-ic-a { animation: pa-bob .9s ease-in-out infinite; }
+.pa-point-in:hover .pa-ic-b, .pa-point-in.is-open .pa-ic-b { animation: pa-bob .9s ease-in-out .3s infinite; }
+.pa-point-in:hover .pa-ic-spin, .pa-point-in.is-open .pa-ic-spin { animation: pa-spin 2.4s linear infinite; }
+.pa-point-in:hover .pa-ic-star, .pa-point-in.is-open .pa-ic-star { animation: pa-beat .8s ease-in-out infinite; }
+.pa-point-in:hover .pa-ic-w1, .pa-point-in.is-open .pa-ic-w1 { animation: pa-wave 1s ease-in-out infinite; }
+.pa-point-in:hover .pa-ic-w2, .pa-point-in.is-open .pa-ic-w2 { animation: pa-wave 1s ease-in-out .25s infinite; }
+.pa-point-in:hover .pa-ic-bulb, .pa-point-in.is-open .pa-ic-bulb { animation: pa-glow 1.2s ease-in-out infinite; }
+.pa-point-in:hover .pa-ic-bar1, .pa-point-in.is-open .pa-ic-bar1 { animation: pa-grow 1.2s ease-in-out infinite; }
+.pa-point-in:hover .pa-ic-bar2, .pa-point-in.is-open .pa-ic-bar2 { animation: pa-grow 1.2s ease-in-out .2s infinite; }
+.pa-point-in:hover .pa-ic-bar3, .pa-point-in.is-open .pa-ic-bar3 { animation: pa-grow 1.2s ease-in-out .4s infinite; }
 
 /* audience */
 .pa-audience { display: grid; gap: 24px; }
