@@ -104,14 +104,11 @@
 .pa-s-pills button:hover { background: color-mix(in srgb, var(--pa-orange) 40%, transparent); }
 .pa-s-pills .pa-s-clear { background: none; color: var(--pa-teal-text); text-decoration: underline; }
 
-.pa-s-grid { display: grid; gap: 28px 22px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-.pa-s-grid.is-related { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+.pa-s-grid { display: grid; gap: 28px 24px; grid-template-columns: 1fr; }
+@media (min-width: 700px) { .pa-s-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1200px) { .pa-s-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .pa-s-card { position: relative; display: flex; flex-direction: column; gap: 14px; padding: 16px; background: var(--tint); border: 1px solid color-mix(in srgb, var(--tint) 60%, var(--pa-text) 10%); border-radius: 30px; transition: box-shadow .35s; }
 .pa-s-card:hover { box-shadow: 0 34px 54px -30px rgba(0, 0, 0, .55); }
-@supports (animation-timeline: view()) {
-  .pa-s-card { animation: pa-s-rise linear both; animation-timeline: view(); animation-range: entry 0% entry 38%; }
-}
-@keyframes pa-s-rise { from { translate: 0 46px; scale: .95; } to { translate: 0 0; scale: 1; } }
 .pa-s-cover-link { display: block; text-decoration: none; border-radius: 22px; }
 .pa-s-cover { position: relative; aspect-ratio: 1; border-radius: 22px; box-shadow: 0 18px 30px -18px rgba(0, 0, 0, .55); transition: transform .25s ease-out; will-change: transform; }
 .pa-s-cover img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 22px; }

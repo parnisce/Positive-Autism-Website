@@ -88,7 +88,7 @@ function Product_({ p, details }: { p: Product; details?: Details | null }) {
 
   const paras = details?.paras?.length ? details.paras : [p.desc];
   const tags = details?.tags ?? [];
-  const related = PRODUCTS.filter((x) => x.id !== p.id && x.cats.includes(p.cats[0])).slice(0, 4);
+  const related = PRODUCTS.filter((x) => x.id !== p.id && x.cats.includes(p.cats[0])).slice(0, 3);
   const free = p.price <= 0;
 
   useEffect(() => {

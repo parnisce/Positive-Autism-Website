@@ -382,7 +382,13 @@ function Shop({ initialQ, initialCat, cancelled }: { initialQ: string; initialCa
 
   /** Capture card positions before a change, so the grid can glide to its new layout afterwards. */
   const mutate = (fn: () => void) => {
-    if (!reduced.current && gridRef.current) flipState.current = Flip.getState(gridRef.current.querySelectorAll("[data-flip-id]"));
+    if (!reduced.current && gridRef.current) {
+      const cards = gridRef.current.querySelectorAll("[data-flip-id]");
+      // finish any animation still running and wipe its leftovers, so positions are measured cleanly
+      Flip.killFlipsOf(cards);
+      gsap.set(cards, { clearProps: "all" });
+      flipState.current = Flip.getState(cards);
+    }
     fn();
   };
 
@@ -419,6 +425,10 @@ function Shop({ initialQ, initialCat, cancelled }: { initialQ: string; initialCa
       duration: 0.6,
       ease: "power3.inOut",
       absolute: true,
+      onComplete: () => {
+        const cards = gridRef.current?.querySelectorAll("[data-flip-id]");
+        if (cards) gsap.set(cards, { clearProps: "all" });
+      },
       onEnter: (els) => gsap.fromTo(els, { autoAlpha: 0, scale: 0.8 }, { autoAlpha: 1, scale: 1, duration: 0.45, delay: 0.15, stagger: 0.025 }),
     });
   }, [results, visible]);
