@@ -64,7 +64,7 @@ function useMotion(rootRef: React.RefObject<HTMLDivElement | null>) {
 
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         // ---- smooth scrolling, driven by GSAP's ticker so ScrollTrigger stays in sync ----
-        const lenis = new Lenis({ lerp: 0.1, smoothWheel: true, anchors: true });
+        const lenis = new Lenis({ lerp: 0.085, smoothWheel: true, wheelMultiplier: 0.9, anchors: true });
         lenis.on("scroll", ScrollTrigger.update);
         const tick = (time: number) => lenis.raf(time * 1000);
         gsap.ticker.add(tick);
@@ -218,7 +218,9 @@ function useMotion(rootRef: React.RefObject<HTMLDivElement | null>) {
             return;
           }
 
-          if (!next) return;
+          if (!next || el.hasAttribute("data-flat") || next.hasAttribute("data-flat")) return;
+          // tall sections are only dimmed (cheap); shrinking them forces a costly repaint every frame
+          const tall = el.offsetHeight > window.innerHeight * 1.2;
           ScrollTrigger.create({
             trigger: el,
             start: () => (el.offsetHeight > window.innerHeight ? "bottom bottom" : "top top"),
@@ -232,7 +234,7 @@ function useMotion(rootRef: React.RefObject<HTMLDivElement | null>) {
             el,
             { "--s": 1, "--cover": 0 },
             {
-              "--s": 0.94,
+              "--s": tall ? 1 : 0.94,
               "--cover": 0.55,
               ease: "none",
               scrollTrigger: { trigger: next, start: "top bottom", end: "top top", scrub: true },
@@ -395,7 +397,7 @@ function Page() {
           </div>
         </section>
 
-        <section className="pa-hscroll pa-layer" id="resources" data-rail>
+        <section className="pa-hscroll pa-layer" id="resources" data-rail data-flat>
           <div className="pa-hscroll-bg" aria-hidden="true">
             <img src="/assets/img/hero.webp" alt="" loading="lazy" />
           </div>
@@ -485,8 +487,7 @@ function Page() {
           </div>
         </section>
 
-        <section className="pa-section pa-news pa-layer" id="news" data-rail>
-          <span className="pa-seam pa-seam-b" aria-hidden="true" />
+        <section className="pa-section pa-news pa-layer" id="news" data-rail data-flat>
           <div className="pa-wrap">
             <h2 className="pa-h2">{t.news.h2}</h2>
             <p className="pa-sub">{t.news.sub}</p>

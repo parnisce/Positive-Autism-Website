@@ -209,7 +209,7 @@
 .pa-hscroll { position: relative; overflow: hidden; isolation: isolate; }
 .pa-hscroll > .pa-wrap, .pa-hscroll > .pa-h-viewport { position: relative; z-index: 1; }
 .pa-hscroll-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .17; -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%); mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%); }
-.pa-hscroll-bg img { position: absolute; left: 0; top: 0; width: 125%; height: 100%; max-width: none; object-fit: cover; object-position: center 35%; filter: saturate(.85) blur(1.5px); will-change: transform; }
+.pa-hscroll-bg img { position: absolute; left: 0; top: 0; width: 125%; height: 100%; max-width: none; object-fit: cover; object-position: center 35%; will-change: transform; }
 :root[data-theme="dark"] .pa-hscroll-bg { opacity: .11; }
 .pa-h-viewport { padding-inline: clamp(20px, 3.4vw, 48px); }
 .pa-h-track { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
@@ -365,6 +365,10 @@
 .pa-layer { position: relative; z-index: var(--pa-z, 1); border-radius: var(--pa-overlap) var(--pa-overlap) 0 0; margin-top: calc(var(--pa-overlap) * -1); box-shadow: 0 -26px 60px -34px rgba(0, 0, 0, .38); scale: var(--s, 1); transform-origin: 50% 100%; }
 .pa-layer::after { content: ""; position: absolute; inset: 0; z-index: 30; border-radius: inherit; background: #04141a; opacity: var(--cover, 0); pointer-events: none; }
 .pa-layer.pa-hero { margin-top: 0; border-radius: 0; box-shadow: none; }
+/* flat sections: no overlap with their neighbours */
+.pa-layer[data-flat], [data-flat] + .pa-layer, [data-flat] + .pin-spacer > .pa-layer,
+.pin-spacer:has(> [data-flat]) + .pa-layer, .pin-spacer:has(> [data-flat]) + .pin-spacer > .pa-layer { margin-top: 0; border-radius: 0; box-shadow: none; }
+[data-flat] + .pin-spacer, .pin-spacer:has(> [data-flat]) + .pin-spacer { margin-top: 0 !important; }
 main > .pa-layer:nth-child(1) { --pa-z: 1; }
 main > .pa-layer:nth-child(2) { --pa-z: 2; }
 main > .pa-layer:nth-child(3) { --pa-z: 3; }
@@ -397,6 +401,11 @@ main > .pa-layer:nth-child(10) { --pa-z: 10; }
 .pa-rail a span { position: absolute; right: 26px; top: 50%; transform: translate(8px, -50%); padding: 4px 12px; border-radius: 999px; background: var(--pa-ink); color: var(--pa-white); font-size: 13px; font-weight: 600; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
 .pa-rail a:hover span, .pa-rail a:focus-visible span { opacity: 1; transform: translate(0, -50%); }
 .pa-loading .pa-rail { visibility: hidden; }
+
+/* Lenis smooth scroll (recommended base styles) */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
 
 /* intro loader with percentage counter */
 .pa-loader { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: var(--pa-teal); color: var(--pa-white); animation: pa-loader-failsafe .01s 7s forwards; }

@@ -124,7 +124,8 @@ export function mountHeroScene(canvas: HTMLCanvasElement, reduceMotion: boolean)
   let raf = 0;
   const frame = () => {
     raf = requestAnimationFrame(frame);
-    if (!visible || document.hidden) return;
+    // skip rendering while the hero is off-screen or fully covered by the next section
+    if (!visible || document.hidden || window.scrollY > host.clientHeight * 0.92) return;
     const t = (performance.now() - t0) / 1000;
     pointer.x += (pointer.tx - pointer.x) * 0.05;
     pointer.y += (pointer.ty - pointer.y) * 0.05;
