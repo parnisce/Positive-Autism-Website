@@ -544,8 +544,7 @@ function Page() {
           </div>
         </section>
 
-        <section className="pa-section pa-layer" id="community">
-          <span className="pa-seam pa-seam-b" aria-hidden="true" />
+        <section className="pa-section pa-layer" id="community" data-flat>
           <div className="pa-wrap pa-community">
             <div>
               <h2 className="pa-h2">{t.community.h2}</h2>

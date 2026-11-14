@@ -326,7 +326,9 @@
 .pa-legal { padding: 140px 0 calc(88px + 44px); min-height: 70dvh; }
 .pa-back { display: inline-block; margin-bottom: 28px; font-weight: 600; text-decoration: none; color: var(--pa-teal-text) !important; border-bottom: 2px solid var(--pa-orange); }
 .pa-back:hover { border-color: var(--pa-teal-text); }
-.pa-legal-doc { max-width: 860px; }
+.pa-legal-doc { max-width: none; }
+.pa-legal-grid { display: grid; grid-template-columns: 1fr; gap: 0 64px; }
+@media (min-width: 1000px) { .pa-legal-grid { grid-template-columns: 1fr 1fr; } }
 .pa-legal-doc h1 { margin: 0 0 8px; font-size: clamp(36px, 5vw, 58px); line-height: 1.05; letter-spacing: -0.03em; }
 .pa-legal-date { margin: 0 0 24px; color: var(--pa-orange-deep); font-weight: 600; font-size: 15px; }
 .pa-legal-intro { font-size: 20px; color: var(--pa-muted); margin: 0 0 12px; }
@@ -367,7 +369,8 @@
 .pa-layer.pa-hero { margin-top: 0; border-radius: 0; box-shadow: none; }
 /* flat sections: no overlap with their neighbours */
 .pa-layer[data-flat], [data-flat] + .pa-layer, [data-flat] + .pin-spacer > .pa-layer,
-.pin-spacer:has(> [data-flat]) + .pa-layer, .pin-spacer:has(> [data-flat]) + .pin-spacer > .pa-layer { margin-top: 0; border-radius: 0; box-shadow: none; }
+.pin-spacer:has(> [data-flat]) + .pa-layer, .pin-spacer:has(> [data-flat]) + .pin-spacer > .pa-layer,
+main:has(> [data-flat]:last-child) + .pa-layer { margin-top: 0; border-radius: 0; box-shadow: none; }
 [data-flat] + .pin-spacer, .pin-spacer:has(> [data-flat]) + .pin-spacer { margin-top: 0 !important; }
 main > .pa-layer:nth-child(1) { --pa-z: 1; }
 main > .pa-layer:nth-child(2) { --pa-z: 2; }

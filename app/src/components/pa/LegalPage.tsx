@@ -47,6 +47,7 @@ function LegalBody({ doc }: { doc: LegalKey }) {
             <h1>{d.title}</h1>
             <p className="pa-legal-date">{d.updated}</p>
             <p className="pa-legal-intro">{withContact(d.intro, lang)}</p>
+            <div className="pa-legal-grid">
             {d.sections.map((s, i) => (
               <section key={s.h}>
                 <h2>
@@ -63,6 +64,7 @@ function LegalBody({ doc }: { doc: LegalKey }) {
                 {s.p?.map((p) => <p key={p}>{withContact(p, lang)}</p>)}
               </section>
             ))}
+            </div>
           </article>
         </div>
       </main>
