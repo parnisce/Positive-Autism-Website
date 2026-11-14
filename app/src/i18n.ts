@@ -1,29 +1,25 @@
 export type Lang = "en" | "es";
 
-/** Real pages on positiveautism.org that the sections link to. */
-export const SITE = "https://positiveautism.org";
+/**
+ * Link targets. Everything points at sections of this page for now (the site's own pages are
+ * still to be built); only the social profiles are external.
+ */
 export const LINKS = {
-  autismInfo: `${SITE}/autism-info/`,
-  whatIsAutism: `${SITE}/what-is-autism/`,
-  forAutistic: `${SITE}/category/content/autism-info/for-autistic-people/`,
-  forParents: `${SITE}/category/content/autism-info/autism-parents-services/`,
-  resources: `${SITE}/resources/`,
-  news: `${SITE}/news/`,
-  neuro: `${SITE}/neurodiversity/`,
-  about: `${SITE}/about-us/`,
-  contact: `${SITE}/contact/`,
-  film: `${SITE}/`,
+  resources: "#resources",
+  film: "https://www.youtube.com/channel/UCgMx6kRjfPaXH6XFvsTFd8A",
+  subscribe: "#stay-connected",
   facebook: "https://www.facebook.com/PositiveAutism.org/",
   youtube: "https://www.youtube.com/channel/UCgMx6kRjfPaXH6XFvsTFd8A",
 };
 
-const ARTICLE_HREFS = [
-  `${SITE}/when-an-autistic-person-cannot-explain-their-anxiety-the-importance-of-observing-the-environment-health-and-communication/`,
-  `${SITE}/why-do-many-autistic-people-avoid-eye-contact/`,
-  `${SITE}/how-to-correct-well-an-autistic-child-why-no-doesnt-work-and-what-to-do-instead/`,
-  `${SITE}/positive-discipline-for-autistic-children-and-youth/`,
-  `${SITE}/the-importance-of-sleep-in-autistic-individuals-challenges-causes-and-practical-recommendations/`,
-  `${SITE}/why-is-autism-more-difficult-to-diagnose-in-girls-and-women/`,
+/** Thumbnails for the six "Latest from Autism Info" articles (same order as the copy). */
+export const ARTICLE_IMAGES = [
+  "/assets/img/articles/anxiety.webp",
+  "/assets/img/articles/eye-contact.jpg",
+  "/assets/img/articles/correct-child.jpg",
+  "/assets/img/articles/positive-discipline.jpg",
+  "/assets/img/articles/sleep.jpg",
+  "/assets/img/articles/girls-women.jpg",
 ];
 
 const en = {
@@ -59,7 +55,6 @@ const en = {
     imgAlt: "A paper boy and girl holding hands in a heart-shaped garden",
     leadText:
       "Autism is a neurodevelopmental condition that affects communication, social interaction and behavior. It is not a disease. It is a different way of experiencing the world, and it looks different in every person.",
-    leadLink: "Read the full guide",
     points: [
       {
         title: "Communication and social life",
@@ -95,7 +90,6 @@ const en = {
       { title: "The Importance of Sleep in Autistic Individuals", date: "Apr 7, 2025" },
       { title: "Why Is Autism More Difficult to Diagnose in Girls and Women?", date: "Mar 10, 2025" },
     ],
-    all: "More Autism Info",
   },
   audience: {
     h2: "Information for every journey",
@@ -105,13 +99,13 @@ const en = {
       {
         title: "For autistic people",
         text: "Understand your strengths, your needs and the skills that help you thrive every day.",
-        cta: "Explore",
+        cta: "Explore resources",
         alt: "Two paper figures standing together inside a blossom",
       },
       {
         title: "For parents",
         text: "Gentle strategies, research updates and ideas to support your child at home and at school.",
-        cta: "Explore",
+        cta: "Explore resources",
         alt: "A paper boy and girl holding hands in a heart-shaped garden",
       },
     ],
@@ -119,7 +113,6 @@ const en = {
   resources: {
     h2: "Resources that build skills",
     sub: "Activities and guides organized by the area of development you want to support. Keep scrolling to explore them all.",
-    explore: "Explore",
     items: [
       "Social and emotional skills",
       "Communication and language",
@@ -195,13 +188,11 @@ const en = {
         alt: "A person practicing a daily living skill",
       },
     ],
-    all: "More news",
   },
   neuro: {
     h2: "Every mind grows in its own way",
     text:
       "Neurodiversity is the idea that brains work in many different ways, and that those differences deserve respect. We share information that focuses on strengths, dignity and real support.",
-    cta: "Learn about neurodiversity",
   },
   about: {
     h2: "About Us",
@@ -210,7 +201,6 @@ const en = {
       "Positive Autism gives parents, caregivers and educators positive tools to help autistic children work through their challenges, discover their abilities and improve their quality of life.",
     p2:
       "The project is led by its director, Silvia Gonzalez, the mother of a child diagnosed with severe autism. After years of researching and building her own programs at home, she shares what she learned as ideas, recommendations and activities that families can use as fun lessons rather than therapy.",
-    cta: "Read our story",
     values: [
       {
         title: "Patience and positivity",
@@ -229,14 +219,14 @@ const en = {
   community: {
     h2: "Follow along",
     sub: "Follow Positive Autism for news and announcements, or reach out with a question.",
-    contact: "Contact us",
+    contact: "Get updates",
   },
   footer: {
     tagline: "Positive information and resources about autism.",
     explore: "Explore",
     learn: "Learn",
     connect: "Connect",
-    credit: "Positive Autism. Content and articles courtesy of positiveautism.org.",
+    credit: "Positive Autism. All rights reserved.",
     film: "Accepted As I Am",
   },
   subscribe: {
@@ -250,7 +240,6 @@ const en = {
     error: "Something went wrong. Please try again in a moment.",
     unconfigured: "Sign-ups are not connected yet. Please check back soon.",
   },
-  articleHrefs: ARTICLE_HREFS,
 };
 
 export type Copy = typeof en;
@@ -288,7 +277,6 @@ const es: Copy = {
     imgAlt: "Un niño y una niña de papel tomados de la mano en un jardín con forma de corazón",
     leadText:
       "El autismo es una condición del neurodesarrollo que afecta la comunicación, la interacción social y la conducta. No es una enfermedad. Es una manera diferente de experimentar el mundo y se manifiesta distinto en cada persona.",
-    leadLink: "Leer la guía completa",
     points: [
       {
         title: "Comunicación y vida social",
@@ -324,7 +312,6 @@ const es: Copy = {
       { title: "La importancia del sueño en las personas autistas", date: "7 abr 2025" },
       { title: "¿Por qué es más difícil diagnosticar el autismo en niñas y mujeres?", date: "10 mar 2025" },
     ],
-    all: "Más info sobre autismo",
   },
   audience: {
     h2: "Información para cada camino",
@@ -334,13 +321,13 @@ const es: Copy = {
       {
         title: "Para personas autistas",
         text: "Conoce tus fortalezas, tus necesidades y las habilidades que te ayudan a crecer cada día.",
-        cta: "Explorar",
+        cta: "Explorar recursos",
         alt: "Dos figuras de papel juntas dentro de una flor",
       },
       {
         title: "Para padres y madres",
         text: "Estrategias amables, novedades de investigación e ideas para apoyar a tu hijo o hija en casa y en la escuela.",
-        cta: "Explorar",
+        cta: "Explorar recursos",
         alt: "Un niño y una niña de papel tomados de la mano en un jardín con forma de corazón",
       },
     ],
@@ -348,7 +335,6 @@ const es: Copy = {
   resources: {
     h2: "Recursos que desarrollan habilidades",
     sub: "Actividades y guías organizadas por el área de desarrollo que quieres apoyar. Sigue desplazándote para verlas todas.",
-    explore: "Explorar",
     items: [
       "Habilidades sociales y emocionales",
       "Comunicación y lenguaje",
@@ -424,13 +410,11 @@ const es: Copy = {
         alt: "Una persona practicando una habilidad de la vida diaria",
       },
     ],
-    all: "Más noticias",
   },
   neuro: {
     h2: "Cada mente crece a su manera",
     text:
       "La neurodiversidad es la idea de que los cerebros funcionan de muchas maneras distintas y de que esas diferencias merecen respeto. Compartimos información centrada en las fortalezas, la dignidad y el apoyo real.",
-    cta: "Conoce la neurodiversidad",
   },
   about: {
     h2: "Quiénes somos",
@@ -439,7 +423,6 @@ const es: Copy = {
       "Positive Autism ofrece a padres, cuidadores y educadores herramientas positivas para ayudar a los niños autistas a superar sus dificultades, descubrir sus capacidades y mejorar su calidad de vida.",
     p2:
       "El proyecto está dirigido por Silvia Gonzalez, madre de un niño diagnosticado con autismo severo. Después de años de investigar y crear sus propios programas en casa, comparte lo aprendido en forma de ideas, recomendaciones y actividades que las familias pueden usar como lecciones divertidas y no como terapia.",
-    cta: "Conoce nuestra historia",
     values: [
       {
         title: "Paciencia y positivismo",
@@ -458,14 +441,14 @@ const es: Copy = {
   community: {
     h2: "Síguenos",
     sub: "Sigue a Positive Autism para ver noticias y anuncios, o escríbenos si tienes una pregunta.",
-    contact: "Contáctanos",
+    contact: "Recibir novedades",
   },
   footer: {
     tagline: "Información y recursos positivos sobre el autismo.",
     explore: "Explorar",
     learn: "Aprender",
     connect: "Conecta",
-    credit: "Positive Autism. Contenido y artículos cortesía de positiveautism.org.",
+    credit: "Positive Autism. Todos los derechos reservados.",
     film: "Accepted As I Am",
   },
   subscribe: {
@@ -479,7 +462,6 @@ const es: Copy = {
     error: "Algo salió mal. Inténtalo de nuevo en un momento.",
     unconfigured: "Las suscripciones aún no están conectadas. Vuelve pronto.",
   },
-  articleHrefs: ARTICLE_HREFS,
 };
 
 export const COPY: Record<Lang, Copy> = { en, es };

@@ -14,7 +14,7 @@ import Magnet from "../components/react-bits/Magnet";
 import SpotlightCard from "../components/react-bits/SpotlightCard";
 import TiltedCard from "../components/react-bits/TiltedCard";
 import { EBOOKS } from "../ebooks";
-import { LINKS } from "../i18n";
+import { ARTICLE_IMAGES, LINKS } from "../i18n";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -147,7 +147,7 @@ function Page() {
     { href: "#neurodiversity", label: t.nav.neuro },
     { href: "#about", label: t.nav.about },
   ];
-  const panelLinks = [LINKS.forAutistic, LINKS.forParents];
+  const panelLinks = [LINKS.resources, LINKS.resources];
   const panelImages = ["/assets/img/bloom-5.webp", "/assets/img/together.webp"];
 
   return (
@@ -228,9 +228,6 @@ function Page() {
                 <img className="pa-info-img" src="/assets/img/together.webp" alt={t.info.imgAlt} loading="lazy" />
                 <h3>{t.info.leadTitle}</h3>
                 <p>{t.info.leadText}</p>
-                <a className="pa-more" href={LINKS.whatIsAutism}>
-                  {t.info.leadLink}
-                </a>
               </div>
               <InfoCards points={t.info.points} />
             </div>
@@ -238,17 +235,17 @@ function Page() {
               <h3>{t.info.articlesTitle}</h3>
               <ul className="pa-article-list">
                 {t.info.articles.map((a, i) => (
-                  <li key={a.title}>
-                    <a href={t.articleHrefs[i]}>
+                  <li key={a.title} className="pa-article pa-reveal">
+                    <div className="pa-article-img">
+                      <img src={ARTICLE_IMAGES[i]} alt="" loading="lazy" />
+                    </div>
+                    <div className="pa-article-body">
                       <time>{a.date}</time>
-                      <span>{a.title}</span>
-                    </a>
+                      <h4>{a.title}</h4>
+                    </div>
                   </li>
                 ))}
               </ul>
-              <a className="pa-more" href={LINKS.autismInfo}>
-                {t.info.all} →
-              </a>
             </div>
           </div>
         </section>
@@ -308,9 +305,6 @@ function Page() {
                 >
                   <span className="pa-res-n">{String(i + 1).padStart(2, "0")}</span>
                   <h3>{r}</h3>
-                  <a className="pa-res-link" href={LINKS.resources}>
-                    {t.resources.explore} <span aria-hidden="true">→</span>
-                  </a>
                 </SpotlightCard>
               ))}
             </div>
@@ -350,7 +344,7 @@ function Page() {
                     </div>
                     <p>{copy.blurb}</p>
                     <Magnet padding={50} magnetStrength={4}>
-                      <a className="pa-btn-buy" href={b.checkoutUrl ?? LINKS.contact}>
+                      <a className="pa-btn-buy" href={b.checkoutUrl ?? LINKS.subscribe}>
                         {b.checkoutUrl ? `${t.ebooks.buy}${b.price ? ` · ${b.price}` : ""}` : t.ebooks.notify}
                       </a>
                     </Magnet>
@@ -383,19 +377,16 @@ function Page() {
             <p className="pa-sub">{t.news.sub}</p>
             <div className="pa-news-row">
               {t.news.items.map((n, i) => (
-                <a key={n.title} className="pa-news-card pa-reveal" href={i === 0 ? t.articleHrefs[0] : LINKS.news}>
+                <article key={n.title} className="pa-news-card pa-reveal">
                   <img src={NEWS_IMAGES[i]} alt={n.alt} loading="lazy" />
                   <div className="pa-news-body">
                     <time>{n.date}</time>
                     <h3>{n.title}</h3>
                     <p>{n.text}</p>
                   </div>
-                </a>
+                </article>
               ))}
             </div>
-            <a className="pa-more" href={LINKS.news}>
-              {t.news.all} →
-            </a>
           </div>
         </section>
 
@@ -404,9 +395,6 @@ function Page() {
             <div className="pa-neuro-card pa-reveal">
               <h2 className="pa-h2">{t.neuro.h2}</h2>
               <p>{t.neuro.text}</p>
-              <a className="pa-neuro-link" href={LINKS.neuro}>
-                {t.neuro.cta}
-              </a>
             </div>
             <div className="pa-strip" aria-hidden="true">
               <img src="/assets/img/bloom-1.webp" alt="" loading="lazy" />
@@ -426,9 +414,6 @@ function Page() {
               <p className="pa-lead-quote">{t.about.quote}</p>
               <p>{t.about.p1}</p>
               <p>{t.about.p2}</p>
-              <a className="pa-more" href={LINKS.about}>
-                {t.about.cta} →
-              </a>
             </div>
             <div className="pa-values">
               {t.about.values.map((v) => (
@@ -452,7 +437,7 @@ function Page() {
               </div>
             </div>
             <Magnet padding={70} magnetStrength={3}>
-              <a className="pa-btn-contact" href={LINKS.contact}>
+              <a className="pa-btn-contact" href={LINKS.subscribe}>
                 {t.community.contact}
               </a>
             </Magnet>
@@ -462,7 +447,7 @@ function Page() {
 
       <footer className="pa-footer">
         <div className="pa-wrap">
-          <div className="pa-subscribe">
+          <div className="pa-subscribe" id="stay-connected">
             <div>
               <h3>{t.subscribe.h3}</h3>
               <p>{t.subscribe.text}</p>
@@ -494,7 +479,7 @@ function Page() {
             <div>
               <h4>{t.footer.connect}</h4>
               <ul>
-                <li><a href={LINKS.contact}>{t.community.contact}</a></li>
+                <li><a href={LINKS.subscribe}>{t.community.contact}</a></li>
                 <li><a href={LINKS.facebook}>Facebook</a></li>
                 <li><a href={LINKS.youtube}>YouTube</a></li>
               </ul>
