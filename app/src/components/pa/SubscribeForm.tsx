@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from "react";
 import { SUBSCRIBE_ENDPOINT } from "../../subscribe";
+import { usePrefs } from "./prefs";
 
 type Status = "idle" | "sending" | "done" | "error" | "unconfigured";
 
 /** "Stay connected" sign-up: parents and readers get notified about new ebook releases. */
 export function SubscribeForm() {
+  const { t } = usePrefs();
   const [status, setStatus] = useState<Status>("idle");
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -31,26 +33,27 @@ export function SubscribeForm() {
     }
   }
 
+  const s = t.subscribe;
   return (
-    <form className="pa-subscribe-form" onSubmit={onSubmit} noValidate={false}>
+    <form className="pa-subscribe-form" onSubmit={onSubmit}>
       <div className="pa-subscribe-fields">
         <label>
-          <span className="pa-sr">Name</span>
-          <input type="text" name="name" placeholder="Name" autoComplete="name" required />
+          <span className="pa-sr">{s.name}</span>
+          <input type="text" name="name" placeholder={s.name} autoComplete="name" required />
         </label>
         <label>
-          <span className="pa-sr">Email</span>
-          <input type="email" name="email" placeholder="Email" autoComplete="email" required />
+          <span className="pa-sr">{s.email}</span>
+          <input type="email" name="email" placeholder={s.email} autoComplete="email" required />
         </label>
       </div>
       <input className="pa-hp" type="text" name="company" tabIndex={-1} autoComplete="off" aria-hidden="true" />
       <button type="submit" disabled={status === "sending"}>
-        {status === "sending" ? "Subscribing..." : "Subscribe"}
+        {status === "sending" ? s.sending : s.button}
       </button>
       <p className="pa-subscribe-note" role="status" aria-live="polite">
-        {status === "done" && "Thank you! We will email you when a new ebook is released."}
-        {status === "error" && "Something went wrong. Please try again in a moment."}
-        {status === "unconfigured" && "Sign-ups are not connected yet. Please check back soon."}
+        {status === "done" && s.done}
+        {status === "error" && s.error}
+        {status === "unconfigured" && s.unconfigured}
       </p>
     </form>
   );

@@ -92,6 +92,7 @@ export function mountHeroScene(canvas: HTMLCanvasElement, reduceMotion: boolean)
     world.add(m);
   }
 
+  let baseY = 0;
   const state = { scroll: 0 };
   const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
   const onPointer = (e: PointerEvent) => {
@@ -107,6 +108,7 @@ export function mountHeroScene(canvas: HTMLCanvasElement, reduceMotion: boolean)
     camera.aspect = w / h;
     // keep the heart on the right on wide screens, centred on narrow ones
     world.position.x = w > 900 ? 2.3 : 0;
+    baseY = w > 900 ? 0 : -2.3;
     camera.position.z = w > 900 ? 7 : 8.5;
     camera.updateProjectionMatrix();
   };
@@ -138,7 +140,7 @@ export function mountHeroScene(canvas: HTMLCanvasElement, reduceMotion: boolean)
       p.m.rotation.x += 0.004 + p.spin * 0.004;
       p.m.rotation.y += 0.006;
     }
-    world.position.y = -state.scroll * 1.2;
+    world.position.y = baseY - state.scroll * 1.2;
     renderer.render(scene, camera);
   };
   if (reduceMotion) {
