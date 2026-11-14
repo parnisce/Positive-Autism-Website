@@ -6,6 +6,7 @@ import { useGSAP } from "@gsap/react";
 
 import "../positive-autism.css";
 import { HeroScene } from "../components/pa/HeroScene";
+import { SubscribeForm } from "../components/pa/SubscribeForm";
 import Magnet from "../components/react-bits/Magnet";
 import SpotlightCard from "../components/react-bits/SpotlightCard";
 import TiltedCard from "../components/react-bits/TiltedCard";
@@ -440,6 +441,13 @@ function Index() {
 
       <footer className="pa-footer">
         <div className="pa-wrap">
+          <div className="pa-subscribe">
+            <div>
+              <h3>Stay Connected</h3>
+              <p>Be the first to know when a new ebook is released.</p>
+            </div>
+            <SubscribeForm />
+          </div>
           <div className="pa-footer-grid">
             <div>
               <img src="/assets/img/logo.png" alt="Positive Autism" width={173} height={44} />

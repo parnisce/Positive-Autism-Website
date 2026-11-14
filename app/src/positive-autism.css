@@ -187,6 +187,22 @@
 @keyframes pa-pulse { 0% { box-shadow: 0 0 0 0 rgba(233, 161, 90, .7), 0 10px 24px rgba(0, 0, 0, .25); } 100% { box-shadow: 0 0 0 28px rgba(233, 161, 90, 0), 0 10px 24px rgba(0, 0, 0, .25); } }
 .pa-strip img:hover { filter: saturate(1.25); }
 
+/* footer: stay connected */
+.pa-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.pa-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.pa-subscribe { display: grid; gap: 24px; padding-bottom: 40px; margin-bottom: 40px; border-bottom: 1px solid rgba(255, 255, 255, .16); }
+.pa-subscribe h3 { margin: 0 0 8px; font-size: 28px; color: var(--pa-teal-soft); letter-spacing: -0.01em; }
+.pa-subscribe p { margin: 0; }
+.pa-subscribe-form { display: grid; gap: 14px; }
+.pa-subscribe-fields { display: grid; gap: 14px; }
+.pa-subscribe-form input[type="text"], .pa-subscribe-form input[type="email"] { width: 100%; height: 54px; padding: 0 18px; font: inherit; font-size: 16px; color: var(--pa-ink); background: var(--pa-white); border: 2px solid transparent; border-radius: 10px; }
+.pa-subscribe-form input:focus-visible { outline: 3px solid var(--pa-orange); outline-offset: 2px; }
+.pa-subscribe-form button { height: 54px; border: 0; border-radius: 10px; background: var(--pa-orange); color: var(--pa-ink); font: inherit; font-weight: 700; font-size: 16px; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; transition: background .2s, transform .2s; }
+.pa-subscribe-form button:hover:not(:disabled) { background: var(--pa-gold); transform: translateY(-2px); }
+.pa-subscribe-form button:disabled { opacity: .7; cursor: progress; }
+.pa-subscribe-note { min-height: 1.5em; font-size: 15px; color: var(--pa-white); }
+@media (min-width: 800px) { .pa-subscribe { grid-template-columns: 1fr 1.6fr; align-items: start; } .pa-subscribe-fields { grid-template-columns: 1fr 1fr; } }
+
 @media (prefers-reduced-motion: reduce) {
   .pa-progress { display: none; }
   .pa-root * { transition: none !important; animation: none !important; transform: none !important; }
