@@ -113,10 +113,12 @@
 
 /* autism info */
 .pa-info-grid { display: grid; gap: 24px; }
-.pa-info-lead { background: var(--pa-teal); color: var(--pa-white); border-radius: 28px; padding: clamp(26px, 3.4vw, 44px); display: grid; gap: 16px; align-content: start; }
+.pa-info-lead { background: var(--pa-teal); color: var(--pa-white); border-radius: 28px; padding: clamp(22px, 2.6vw, 32px); display: flex; flex-direction: column; gap: 16px; }
+.pa-info-img { flex: 1 1 220px; min-height: 220px; width: 100%; object-fit: cover; object-position: center 40%; border-radius: 20px; display: block; }
+.pa-info-lead h3, .pa-info-lead p { padding-inline: clamp(4px, 1vw, 12px); }
 .pa-info-lead h3 { margin: 0; font-size: clamp(28px, 3vw, 40px); line-height: 1.1; letter-spacing: -0.02em; }
 .pa-info-lead p { margin: 0; font-size: 18px; }
-.pa-info-lead .pa-more { color: var(--pa-white) !important; border-color: var(--pa-gold); justify-self: start; }
+.pa-info-lead .pa-more { color: var(--pa-white) !important; border-color: var(--pa-gold); align-self: flex-start; margin: 0 0 6px clamp(4px, 1vw, 12px); }
 .pa-points { display: grid; gap: 16px; grid-template-columns: 1fr; }
 .pa-articles { margin-top: 48px; }
 .pa-articles h3 { margin: 0 0 16px; font-size: 26px; letter-spacing: -0.01em; }

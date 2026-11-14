@@ -225,6 +225,7 @@ function Page() {
             <p className="pa-sub">{t.info.sub}</p>
             <div className="pa-info-grid">
               <div className="pa-info-lead pa-reveal">
+                <img className="pa-info-img" src="/assets/img/together.webp" alt={t.info.imgAlt} loading="lazy" />
                 <h3>{t.info.leadTitle}</h3>
                 <p>{t.info.leadText}</p>
                 <a className="pa-more" href={LINKS.whatIsAutism}>

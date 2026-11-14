@@ -56,6 +56,7 @@ const en = {
     h2: "Autism Info",
     sub: "Clear, positive explanations of autism, written for the people who live it and the people who love them.",
     leadTitle: "What is autism?",
+    imgAlt: "A paper boy and girl holding hands in a heart-shaped garden",
     leadText:
       "Autism is a neurodevelopmental condition that affects communication, social interaction and behavior. It is not a disease. It is a different way of experiencing the world, and it looks different in every person.",
     leadLink: "Read the full guide",
@@ -284,6 +285,7 @@ const es: Copy = {
     h2: "Info sobre autismo",
     sub: "Explicaciones claras y positivas sobre el autismo, escritas para quienes lo viven y para quienes los quieren.",
     leadTitle: "¿Qué es el autismo?",
+    imgAlt: "Un niño y una niña de papel tomados de la mano en un jardín con forma de corazón",
     leadText:
       "El autismo es una condición del neurodesarrollo que afecta la comunicación, la interacción social y la conducta. No es una enfermedad. Es una manera diferente de experimentar el mundo y se manifiesta distinto en cada persona.",
     leadLink: "Leer la guía completa",
