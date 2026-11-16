@@ -22,9 +22,9 @@
 .ad-nav-foot { margin-top: auto; display: grid; gap: 4px; }
 .ad-nav-foot a, .ad-nav-foot button { font-weight: 500; color: #4a6a70; }
 .ad-main { flex: 1; min-width: 0; overflow-y: auto; }
-.ad-page { max-width: 1120px; margin: 0 auto; padding: 34px 32px 110px; }
+.ad-page { max-width: none; margin: 0; padding: 34px clamp(20px, 3vw, 48px) 110px; }
 .ad-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 26px; }
-.ad-head p { max-width: 62ch; }
+.ad-head p { max-width: 80ch; }
 .ad-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 
 /* controls */
@@ -52,7 +52,7 @@ textarea.ad-in { resize: vertical; line-height: 1.5; }
 .ad-pill.warn { background: #fbe6cd; color: #7a4a0e; }
 
 /* forms */
-.ad-form { display: grid; gap: 18px; max-width: 820px; }
+.ad-form { display: grid; gap: 18px; max-width: none; }
 .ad-form.two { max-width: none; grid-template-columns: 1fr; gap: 28px; }
 @media (min-width: 980px) { .ad-form.two { grid-template-columns: 1.15fr 1fr; } }
 .ad-col { display: grid; gap: 18px; align-content: start; }
