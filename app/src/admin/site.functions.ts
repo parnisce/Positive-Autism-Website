@@ -11,23 +11,21 @@ export type PostCard = { slug: string; title: string; excerpt: string; cover: st
 export type PostFull = PostCard & { body: string; updated_at: string };
 
 export const getPosts = createServerFn({ method: "GET" }).handler(async (): Promise<PostCard[]> => {
-  const { getDb } = await import("./db.server");
-  const db = await getDb();
-  if (!db) return [];
-  const r = await db
-    .prepare("SELECT slug, title, excerpt, cover, created_at FROM posts WHERE published = 1 ORDER BY created_at DESC LIMIT 100")
-    .all<PostCard>();
-  return r.results;
+  const store = await import("./store.server");
+  try {
+    return await store.listPublished();
+  } catch {
+    return [];
+  }
 });
 
 export const getPost = createServerFn({ method: "GET" })
   .validator(z.object({ slug: z.string().min(1).max(120) }))
   .handler(async ({ data }): Promise<PostFull | null> => {
-    const { getDb } = await import("./db.server");
-    const db = await getDb();
-    if (!db) return null;
-    return db
-      .prepare("SELECT slug, title, excerpt, cover, body, created_at, updated_at FROM posts WHERE slug = ? AND published = 1")
-      .bind(data.slug)
-      .first<PostFull>();
+    const store = await import("./store.server");
+    try {
+      return await store.getPublished(data.slug);
+    } catch {
+      return null;
+    }
   });

@@ -4,6 +4,7 @@ import { api, getStatus, money, type Setup, type Status } from "./api";
 import { BlogTab } from "./BlogTab";
 import { ContentTab } from "./ContentTab";
 import { mergeProducts, ProductsTab } from "./ProductsTab";
+import { SCHEMA_SQL } from "./schema-sql";
 import "./admin.css";
 
 type Tab = "overview" | "pages" | "blog" | "ebooks" | "settings";
@@ -20,7 +21,7 @@ export function AdminApp() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
-    getStatus().then(setSt).catch(() => setSt({ auth: false, setup: { password: false, db: false, stripe: null } }));
+    getStatus().then(setSt).catch(() => setSt({ auth: false, setup: { password: false, db: false, adminKey: false, stripe: null } }));
   }, []);
   if (!mounted || !st) return <div className="ad ad-center"><p>Loading…</p></div>;
   if (!st.setup.password) return <Setup setup={st.setup} />;
@@ -41,7 +42,7 @@ function Setup({ setup }: { setup: Setup }) {
           </li>
           <li>Redeploy (Deployments → the latest one → Retry deployment), then reload this page.</li>
         </ol>
-        <p className="ad-fine">Database attached: {setup.db ? "yes" : "not yet (see Settings after signing in)"}</p>
+        <p className="ad-fine">Database ready: {setup.db ? "yes" : "not yet (see Settings after signing in)"}</p>
       </div>
     </div>
   );
@@ -92,6 +93,7 @@ function Shell({ setup, onOut }: { setup: Setup; onOut: () => void }) {
     history.replaceState(null, "", `#${tab}`);
     window.scrollTo(0, 0);
   }, [tab]);
+  const ready = setup.db && setup.adminKey;
   async function out() {
     await api("logout").catch(() => {});
     onOut();
@@ -118,11 +120,11 @@ function Shell({ setup, onOut }: { setup: Setup; onOut: () => void }) {
         </div>
       </aside>
       <main className="ad-main">
-        {!setup.db && tab !== "settings" ? <NoDb go={() => setTab("settings")} /> : null}
-        {setup.db && tab === "overview" && <Overview />}
-        {setup.db && tab === "pages" && <ContentTab />}
-        {setup.db && tab === "blog" && <BlogTab />}
-        {setup.db && tab === "ebooks" && <ProductsTab />}
+        {!ready && tab !== "settings" ? <NoDb go={() => setTab("settings")} /> : null}
+        {ready && tab === "overview" && <Overview />}
+        {ready && tab === "pages" && <ContentTab />}
+        {ready && tab === "blog" && <BlogTab />}
+        {ready && tab === "ebooks" && <ProductsTab />}
         {tab === "settings" && <Settings setup={setup} />}
       </main>
     </div>
@@ -134,7 +136,7 @@ function NoDb({ go }: { go: () => void }) {
     <div className="ad-page">
       <div className="ad-card">
         <h1>One more step: connect the database</h1>
-        <p>Saving text, blog posts, ebooks and analytics needs a small Cloudflare database. It is free and takes about two minutes.</p>
+        <p>Saving text, blog posts, ebooks and analytics needs your Supabase database to be set up. It takes about three minutes.</p>
         <button className="ad-btn" onClick={go}>
           Show me how
         </button>
@@ -337,27 +339,33 @@ function Settings({ setup }: { setup: Setup }) {
         <h2>Status</h2>
         <ul className="ad-status">
           <li className="ok">Admin password is set</li>
-          <li className={setup.db ? "ok" : "bad"}>Database {setup.db ? "connected" : "not connected yet"}</li>
+          <li className={setup.db ? "ok" : "bad"}>Database tables {setup.db ? "found" : "not created yet"}</li>
+          <li className={setup.adminKey ? "ok" : "bad"}>Supabase secret key {setup.adminKey ? "found" : "not added yet"}</li>
           <li className={setup.stripe ? "ok" : "bad"}>
             Stripe payments: {setup.stripe ? `${setup.stripe === "live" ? "live" : "test (sandbox)"} key found` : "no key found"}
           </li>
         </ul>
       </section>
-      {!setup.db && (
+      {!(setup.db && setup.adminKey) && (
         <section className="ad-card">
-          <h2>Connect the database (about 2 minutes, free)</h2>
+          <h2>Connect Supabase (about 3 minutes)</h2>
           <ol className="ad-steps">
             <li>
-              In the Cloudflare dashboard open <b>Storage &amp; Databases → D1 SQL Database → Create database</b>. Name it <code>positive-autism</code>.
+              In Supabase open your project, then <b>SQL Editor → New query</b>. Paste the setup script below and press <b>Run</b>. It creates the tables and keeps them private.
+              <br />
+              <button type="button" className="ad-btn ghost sm" onClick={() => navigator.clipboard.writeText(SCHEMA_SQL)}>
+                Copy setup script
+              </button>
             </li>
             <li>
-              Open <b>Workers &amp; Pages → positive-autism-website → Settings → Bindings → Add → D1 database</b>. Set the variable name to{" "}
-              <code>DB</code> and choose the database you just made. Save.
+              In Supabase open <b>Project Settings → API Keys</b> and copy the <b>secret</b> key (it starts with <code>sb_secret_</code>). Never share it or paste it in public.
             </li>
             <li>
-              Go to <b>Deployments</b>, open the latest deployment and press <b>Retry deployment</b> so the binding is picked up.
+              In Cloudflare open <b>Workers &amp; Pages → positive-autism-website → Settings → Variables and Secrets</b>. Add a secret named <code>SUPABASE_SECRET_KEY</code> with that key.
             </li>
-            <li>Reload this page. The tables are created automatically.</li>
+            <li>
+              Open <b>Deployments</b>, then the latest one, and press <b>Retry deployment</b>. Reload this page when it finishes.
+            </li>
           </ol>
         </section>
       )}

@@ -3,8 +3,9 @@
  * project settings); the session is a signed, HttpOnly cookie. Every action except login needs it.
  */
 import { CATEGORIES, ORIGINAL, slugify, type ProductEdit } from "../shop/catalog";
-import { bustSiteData, loadSiteData } from "./data.server";
-import { envVar, getDb, nowIso, today, type Db } from "./db.server";
+import { bustSiteData } from "./data.server";
+import { envVar, today } from "./db.server";
+import * as store from "./store.server";
 import { flattenCopy, type ContentOverrides } from "./site-data";
 
 const COOKIE = "pa_admin";
@@ -49,14 +50,14 @@ const urlOk = (v: string) => v === "" || v.startsWith("/") || /^https:\/\//i.tes
 
 export async function handleAdmin(request: Request): Promise<Response> {
   const password = await envVar("ADMIN_PASSWORD");
-  const db = await getDb();
+  const health = await store.health();
   const stripeKey = await envVar("STRIPE_SECRET_KEY");
   const secure = new URL(request.url).protocol === "https:";
 
   if (request.method === "GET") {
     return json({
       auth: !!password && (await signedIn(request, password)),
-      setup: { password: !!password, db: !!db, stripe: stripeKey ? (stripeKey.startsWith("sk_live_") ? "live" : "test") : null },
+      setup: { password: !!password, db: health.tables, adminKey: health.secretKey, stripe: stripeKey ? (stripeKey.startsWith("sk_live_") ? "live" : "test") : null },
     });
   }
 
@@ -84,50 +85,43 @@ export async function handleAdmin(request: Request): Promise<Response> {
   if (action === "logout") return json({ ok: true }, 200, { "set-cookie": `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict` });
 
   if (!password || !(await signedIn(request, password))) return json({ error: "auth" }, 401);
-  if (!db) return json({ error: "no_db" }, 503);
+  if (!health.tables) return json({ error: "no_db" }, 503);
+  if (!health.secretKey) return json({ error: "no_secret_key" }, 503);
 
   try {
-    return await run(action, body, db);
+    return await run(action, body);
   } catch (e) {
     console.error("admin", action, e);
     return json({ error: "server", message: e instanceof Error ? e.message : "error" }, 500);
   }
 }
 
-async function run(action: string, body: Record<string, unknown>, db: Db): Promise<Response> {
+async function run(action: string, body: Record<string, unknown>): Promise<Response> {
   switch (action) {
     case "stats":
-      return json(await stats(db, Math.min(90, Math.max(1, Number(body.days) || 30))));
+      return json(await stats(Math.min(90, Math.max(1, Number(body.days) || 30))));
 
     case "content.get": {
-      const c = await db.prepare("SELECT value FROM settings WHERE key = 'content'").first<{ value: string }>();
-      return json({ content: c ? (JSON.parse(c.value) as ContentOverrides) : { en: {}, es: {} } });
+      const c = await store.getContent();
+      return json({ content: { en: c?.en ?? {}, es: c?.es ?? {} } });
     }
     case "content.save": {
       const changes = Array.isArray(body.changes) ? (body.changes as { lang?: string; path?: string; value?: unknown }[]) : [];
-      const c = await db.prepare("SELECT value FROM settings WHERE key = 'content'").first<{ value: string }>();
-      const cur: ContentOverrides = c ? JSON.parse(c.value) : { en: {}, es: {} };
+      const c = await store.getContent();
+      const cur: ContentOverrides = { en: c?.en ?? {}, es: c?.es ?? {} };
       const valid = { en: new Set(flattenCopy("en").map((f) => f.path)), es: new Set(flattenCopy("es").map((f) => f.path)) };
       for (const ch of changes) {
         if ((ch.lang !== "en" && ch.lang !== "es") || typeof ch.path !== "string" || !valid[ch.lang].has(ch.path)) continue;
-        cur[ch.lang] ??= {};
         if (typeof ch.value === "string") cur[ch.lang][ch.path] = ch.value.slice(0, 4000);
         else delete cur[ch.lang][ch.path];
       }
-      await db
-        .prepare("INSERT INTO settings (key, value) VALUES ('content', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
-        .bind(JSON.stringify(cur))
-        .run();
+      await store.setContent(cur);
       bustSiteData();
       return json({ ok: true, content: cur });
     }
 
-    case "posts.list": {
-      const r = await db
-        .prepare("SELECT id, slug, title, excerpt, body, cover, published, created_at, updated_at FROM posts ORDER BY created_at DESC")
-        .all();
-      return json({ posts: r.results });
-    }
+    case "posts.list":
+      return json({ posts: await store.listPostsAdmin() });
     case "posts.save": {
       const title = str(body.title, 200);
       if (!title) return json({ error: "title_required" }, 400);
@@ -135,41 +129,30 @@ async function run(action: string, body: Record<string, unknown>, db: Db): Promi
       if (!urlOk(cover)) return json({ error: "bad_cover" }, 400);
       const id = Number(body.id) || 0;
       let slug = slugify(str(body.slug, 100) || title);
-      const taken = async (s: string) => !!(await db.prepare("SELECT id FROM posts WHERE slug = ? AND id != ?").bind(s, id).first());
       let n = 2;
       const base = slug;
-      while (await taken(slug)) slug = `${base}-${n++}`;
-      const f = [title, str(body.excerpt, 500), str(body.body, 60000), cover, body.published ? 1 : 0];
-      const now = nowIso();
-      if (id) {
-        await db
-          .prepare("UPDATE posts SET slug=?, title=?, excerpt=?, body=?, cover=?, published=?, updated_at=? WHERE id=?")
-          .bind(slug, ...f, now, id)
-          .run();
-        return json({ ok: true, id, slug });
-      }
-      const r = await db
-        .prepare("INSERT INTO posts (slug, title, excerpt, body, cover, published, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)")
-        .bind(slug, ...f, now, now)
-        .run();
-      return json({ ok: true, id: r.meta?.last_row_id, slug });
+      while (await store.slugTaken(slug, id)) slug = `${base}-${n++}`;
+      const saved = await store.savePost(id, {
+        slug,
+        title,
+        excerpt: str(body.excerpt, 500),
+        body: str(body.body, 60000),
+        cover,
+        published: !!body.published,
+      });
+      return json({ ok: true, id: saved, slug });
     }
     case "posts.delete":
-      await db.prepare("DELETE FROM posts WHERE id = ?").bind(Number(body.id) || 0).run();
+      await store.deletePost(Number(body.id) || 0);
       return json({ ok: true });
 
-    case "products.list": {
-      const d = await loadSiteData();
-      return json({ edits: d.products });
-    }
+    case "products.list":
+      return json({ edits: await store.listProductEdits() });
     case "products.save": {
       const e = (body.edit ?? {}) as Record<string, unknown>;
       let id = Number(e.id) || 0;
       const custom = !!e.custom;
-      if (custom && !id) {
-        const m = await db.prepare("SELECT MAX(id) AS m FROM products WHERE id >= 900000").first<{ m: number | null }>();
-        id = Math.max(900000, m?.m ?? 900000) + 1;
-      }
+      if (custom && !id) id = (await store.maxCustomId()) + 1;
       if (!custom && !ORIGINAL.some((p) => p.id === id)) return json({ error: "unknown_product" }, 400);
       if (custom && id < 900000) return json({ error: "bad_id" }, 400);
       const img = str(e.img, 400);
@@ -193,15 +176,12 @@ async function run(action: string, body: Record<string, unknown>, db: Db): Promi
         tags: list(e.tags, 30, 60),
         file,
       };
-      await db
-        .prepare("INSERT INTO products (id, data, updated_at) VALUES (?,?,?) ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at")
-        .bind(id, JSON.stringify(edit), nowIso())
-        .run();
+      await store.saveProduct(edit);
       bustSiteData();
       return json({ ok: true, edit });
     }
     case "products.reset":
-      await db.prepare("DELETE FROM products WHERE id = ?").bind(Number(body.id) || 0).run();
+      await store.deleteProduct(Number(body.id) || 0);
       bustSiteData();
       return json({ ok: true });
 
@@ -210,23 +190,16 @@ async function run(action: string, body: Record<string, unknown>, db: Db): Promi
       const data = typeof body.data === "string" ? body.data : "";
       if (!/^image\/(jpeg|png|webp|gif)$/.test(mime) || !/^[A-Za-z0-9+/=]+$/.test(data) || data.length > 1_400_000) return json({ error: "bad_image" }, 400);
       const id = hex(crypto.getRandomValues(new Uint8Array(8)).buffer);
-      await db.prepare("INSERT INTO images (id, mime, data, created_at) VALUES (?,?,?,?)").bind(id, mime, data, nowIso()).run();
+      await store.putImage(id, mime, data);
       return json({ ok: true, url: `/api/img/${id}` });
     }
   }
   return json({ error: "unknown_action" }, 400);
 }
 
-async function stats(db: Db, days: number) {
+async function stats(days: number) {
   const from = new Date(Date.now() - (days - 1) * 86400000).toISOString().slice(0, 10);
-  const rows = (
-    await db
-      .prepare(
-        "SELECT day, kind, key, SUM(n) AS n FROM stats WHERE day >= ? AND kind IN ('page','visit','cart','buy','ref','country') GROUP BY day, kind, key",
-      )
-      .bind(from)
-      .all<{ day: string; kind: string; key: string; n: number }>()
-  ).results;
+  const rows = await store.fetchStats(from);
 
   const daily = new Map<string, { views: number; visitors: number }>();
   for (let i = 0; i < days; i++) daily.set(new Date(Date.now() - (days - 1 - i) * 86400000).toISOString().slice(0, 10), { views: 0, visitors: 0 });

@@ -8,9 +8,8 @@ export const Route = createFileRoute("/sitemap.xml")({
       GET: async ({ request }) => {
         const { syncSite } = await import("../admin/data.server");
         await syncSite();
-        const { getDb } = await import("../admin/db.server");
-        const db = await getDb();
-        const posts = db ? (await db.prepare("SELECT slug FROM posts WHERE published = 1").all<{ slug: string }>()).results : [];
+        const store = await import("../admin/store.server");
+        const posts = await store.listPublished().catch(() => []);
         const origin = new URL(request.url).origin;
         const today = new Date().toISOString().split("T")[0];
         const xml = [
