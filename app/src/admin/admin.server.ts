@@ -101,14 +101,23 @@ async function run(action: string, body: Record<string, unknown>): Promise<Respo
   switch (action) {
     case "orders": {
       try {
-        return json({ ok: true, ...(await fetchOrders(body.force === true)) });
+        const r = await fetchOrders(body.force === true);
+        const hidden = new Set(await store.getHiddenOrders().catch(() => []));
+        return json({ ok: true, livemode: r.livemode, orders: r.orders.map((o) => ({ ...o, hidden: hidden.has(o.id) })) });
       } catch (e) {
         if (e instanceof OrdersError) return json({ ok: false, error: e.code, message: e.message });
         throw e;
       }
     }
+    case "orders.hide": {
+      const ids = (Array.isArray(body.ids) ? body.ids : []).filter((x): x is string => typeof x === "string" && /^cs_[A-Za-z0-9_]{10,200}$/.test(x)).slice(0, 500);
+      const cur = new Set(await store.getHiddenOrders());
+      for (const id of ids) (body.hidden ? cur.add(id) : cur.delete(id));
+      await store.setHiddenOrders([...cur]);
+      return json({ ok: true });
+    }
     case "stats":
-      return json(await stats(Math.min(90, Math.max(1, Number(body.days) || 30))));
+      return json(await stats(Math.min(180, Math.max(1, Number(body.days) || 30))));
 
     case "content.get": {
       const c = await store.getContent();

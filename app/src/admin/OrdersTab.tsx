@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { api } from "./api";
 import { STATUS_LABEL, isSale, type Order, type OrderStatus } from "./orders-types";
 import { Card, OrdersNotice, StatusPill, cash, downloadCsv, num, useOrders, when } from "./ui";
 
@@ -24,7 +25,7 @@ export function customersOf(orders: Order[]): Customer[] {
 export function OrdersTab() {
   const data = useOrders();
   const [view, setView] = useState<"orders" | "customers">("orders");
-  const [status, setStatus] = useState<OrderStatus | "all">("all");
+  const [status, setStatus] = useState<OrderStatus | "all" | "hidden">("all");
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<Order | null>(null);
 
@@ -33,8 +34,14 @@ export function OrdersTab() {
     for (const o of data.orders) c[o.status] = (c[o.status] ?? 0) + 1;
     return c;
   }, [data.orders]);
-  const list = data.orders.filter(
-    (o) => (status === "all" || o.status === status) && (!q || `${o.name} ${o.email} ${o.id} ${o.items.map((i) => i.title).join(" ")}`.toLowerCase().includes(q.toLowerCase())),
+  const hiddenList = useMemo(() => data.all.filter((o) => o.hidden), [data.all]);
+  async function setHidden(ids: string[], hidden: boolean) {
+    await api("orders.hide", { ids, hidden }).catch(() => {});
+    setOpen(null);
+    data.reload();
+  }
+  const list = (status === "hidden" ? hiddenList : data.orders).filter(
+    (o) => (status === "all" || status === "hidden" || o.status === status) && (!q || `${o.name} ${o.email} ${o.id} ${o.items.map((i) => i.title).join(" ")}`.toLowerCase().includes(q.toLowerCase())),
   );
   const customers = useMemo(() => customersOf(data.orders), [data.orders]);
 
@@ -74,8 +81,21 @@ export function OrdersTab() {
                     {s === "all" ? "All" : STATUS_LABEL[s]} <em>{counts[s] ?? 0}</em>
                   </button>
                 ))}
+              {hiddenList.length > 0 && (
+                <button className={status === "hidden" ? "on" : ""} onClick={() => setStatus("hidden")}>
+                  Hidden <em>{hiddenList.length}</em>
+                </button>
+              )}
             </div>
             <input className="ad-in" placeholder="Search by name, email, order or ebook…" value={q} onChange={(e) => setQ(e.target.value)} />
+            {list.length > 0 && (status !== "all" || q) && (
+              <button
+                className="ad-btn ghost"
+                onClick={() => confirm(`${status === "hidden" ? "Show" : "Hide"} these ${list.length} orders ${status === "hidden" ? "again" : "from every total and report"}?`) && setHidden(list.map((o) => o.id), status !== "hidden")}
+              >
+                {status === "hidden" ? "Restore these" : `Hide these ${list.length}`}
+              </button>
+            )}
             <button
               className="ad-btn ghost"
               onClick={() =>
@@ -245,7 +265,10 @@ export function OrdersTab() {
                 Open in Stripe ↗
               </a>
             )}
-            <p className="ad-fine">Refunds are made in Stripe. They show here after you refresh.</p>
+            <button className="ad-btn ghost" onClick={() => setHidden([open.id], !open.hidden)}>
+              {open.hidden ? "Show this order again" : "Hide this order (test or fake)"}
+            </button>
+            <p className="ad-fine">Hidden orders are left out of the dashboard, reports and customers. Refunds are made in Stripe and show here after you refresh.</p>
           </div>
         </div>
       )}

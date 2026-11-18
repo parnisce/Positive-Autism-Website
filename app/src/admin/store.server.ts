@@ -164,3 +164,12 @@ export async function fetchStats(from: string) {
   }
   return out;
 }
+
+// ---- orders the owner hid (test or fake orders) ----
+export async function getHiddenOrders(): Promise<string[]> {
+  const r = await rest<{ value: string[] }[]>("settings?select=value&key=eq.hidden_orders&limit=1", { admin: true });
+  return Array.isArray(r[0]?.value) ? r[0].value : [];
+}
+export async function setHiddenOrders(ids: string[]) {
+  await rest("settings?on_conflict=key", { method: "POST", admin: true, prefer: "resolution=merge-duplicates", body: { key: "hidden_orders", value: ids.slice(-1000) } });
+}

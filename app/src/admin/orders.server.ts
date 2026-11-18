@@ -72,7 +72,8 @@ export async function fetchOrders(force = false): Promise<{ orders: Order[]; liv
     const res = await fetch(`${base}/v1/checkout/sessions?${p}`, { headers: { authorization: `Bearer ${key}` } });
     const j = (await res.json().catch(() => ({}))) as { data?: Sess[]; has_more?: boolean; error?: { message?: string } };
     if (!res.ok || !j.data) throw new OrdersError("stripe", j.error?.message || `Stripe error ${res.status}`);
-    orders.push(...j.data.map(toOrder));
+    // only this shop's checkouts (they carry the ebook ids); the Stripe account may be shared with other sites
+    orders.push(...j.data.filter((x) => x.metadata?.ids).map(toOrder));
     if (!j.has_more || !j.data.length) break;
     after = j.data[j.data.length - 1].id;
   }

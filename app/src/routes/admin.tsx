@@ -9,10 +9,10 @@ export const Route = createFileRoute("/admin")({
       { title: "Admin | Positive Autism" },
       { name: "robots", content: "noindex, nofollow" },
       // dark-mode browser extensions: leave this page alone
-      { name: "color-scheme", content: "dark" },
+      { name: "color-scheme", content: "only light" },
       { name: "darkreader-lock" },
     ],
-    styles: [{ children: "html,body{background:#070d17 !important;color:#e8f1f8;color-scheme:dark}" }],
+    styles: [{ children: "html,body{background:#f3f7f7 !important;color:#12333a;color-scheme:only light}" }],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" as const },

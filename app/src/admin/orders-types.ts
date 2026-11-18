@@ -16,6 +16,8 @@ export type Order = {
   items: { id: number | null; title: string; amount: number }[];
   pi: string | null;
   live: boolean;
+  /** hidden by the owner (test or fake orders): left out of every total */
+  hidden?: boolean;
 };
 
 /** Woo-style wording for each status. */

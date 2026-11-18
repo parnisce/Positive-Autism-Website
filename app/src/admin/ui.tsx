@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { api } from "./api";
 import { STATUS_LABEL, type Order, type OrderStatus } from "./orders-types";
 
@@ -101,20 +101,22 @@ export function useStats(days: number) {
   return { s, err, reload: useCallback(() => setTick((t) => t + 1), []) };
 }
 
-type OrdersState = { state: "loading" | "ok" | "no_key" | "error"; orders: Order[]; message: string; live: boolean };
+type OrdersState = { state: "loading" | "ok" | "no_key" | "error"; all: Order[]; message: string; live: boolean };
 export function useOrders() {
-  const [o, setO] = useState<OrdersState>({ state: "loading", orders: [], message: "", live: false });
+  const [o, setO] = useState<OrdersState>({ state: "loading", all: [], message: "", live: false });
   const [tick, setTick] = useState(0);
   useEffect(() => {
     api<{ ok: boolean; orders?: Order[]; livemode?: boolean; error?: string; message?: string }>("orders", { force: tick > 0 })
       .then((r) =>
         r.ok
-          ? setO({ state: "ok", orders: r.orders ?? [], message: "", live: !!r.livemode })
-          : setO({ state: r.error === "no_key" ? "no_key" : "error", orders: [], message: r.message || "", live: false }),
+          ? setO({ state: "ok", all: r.orders ?? [], message: "", live: !!r.livemode })
+          : setO({ state: r.error === "no_key" ? "no_key" : "error", all: [], message: r.message || "", live: false }),
       )
-      .catch(() => setO({ state: "error", orders: [], message: "Could not reach the server.", live: false }));
+      .catch(() => setO({ state: "error", all: [], message: "Could not reach the server.", live: false }));
   }, [tick]);
-  return { ...o, reload: useCallback(() => setTick((t) => t + 1), []) };
+  // `orders` leaves out the ones the owner hid; `all` has everything
+  const orders = useMemo(() => o.all.filter((x) => !x.hidden), [o.all]);
+  return { ...o, orders, reload: useCallback(() => setTick((t) => t + 1), []) };
 }
 
 export function OrdersNotice({ o }: { o: ReturnType<typeof useOrders> }) {
