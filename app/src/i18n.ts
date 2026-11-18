@@ -58,6 +58,12 @@ const en = {
       "Learn at your own pace with practical guides, research news and ebooks for autistic people, parents and the teachers who support them.",
     start: "Start learning",
     browse: "Browse ebooks",
+    step: "Slide",
+    slides: [
+      { eyebrow: "Learn at your own pace", title: "Practical guides for every day.", lead: "Step-by-step resources, visual supports and ebooks that turn big goals into small, calm steps." },
+      { eyebrow: "Support for families", title: "Walk the journey together.", lead: "Trusted advice for parents and caregivers, from the first questions to everyday routines." },
+      { eyebrow: "A caring community", title: "Every mind belongs.", lead: "Join teachers, families and autistic voices building a more understanding world." },
+    ],
   },
   info: {
     h2: "Autism Info",
@@ -281,6 +287,12 @@ const es: Copy = {
       "Aprende a tu ritmo con guías prácticas, noticias de investigación y ebooks para personas autistas, familias y docentes que las apoyan.",
     start: "Empezar a aprender",
     browse: "Ver ebooks",
+    step: "Diapositiva",
+    slides: [
+      { eyebrow: "Aprende a tu propio ritmo", title: "Guías prácticas para cada día.", lead: "Recursos paso a paso, apoyos visuales y ebooks que convierten grandes metas en pasos pequeños y tranquilos." },
+      { eyebrow: "Apoyo para las familias", title: "Recorramos el camino juntos.", lead: "Consejos de confianza para madres, padres y cuidadores, desde las primeras preguntas hasta las rutinas diarias." },
+      { eyebrow: "Una comunidad que cuida", title: "Todas las mentes pertenecen.", lead: "Únete a docentes, familias y voces autistas que construyen un mundo más comprensivo." },
+    ],
   },
   info: {
     h2: "Info sobre autismo",

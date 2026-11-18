@@ -7,7 +7,7 @@ import { useGSAP } from "@gsap/react";
 
 import "../positive-autism.css";
 import { THEME_BOOT } from "../theme-boot";
-import { HeroScene } from "../components/pa/HeroScene";
+import { HeroVideos } from "../components/pa/HeroVideos";
 import { InfoCards } from "../components/pa/InfoCards";
 import { PrefsProvider, usePrefs } from "../components/pa/prefs";
 import { SiteFooter, SiteHeader } from "../components/pa/SiteChrome";
@@ -197,6 +197,7 @@ function useMotion(rootRef: React.RefObject<HTMLDivElement | null>) {
         const track = root.querySelector<HTMLElement>(".pa-h-track");
         layers.forEach((el, i) => {
           const next = layers[i + 1];
+          if (el.hasAttribute("data-slider")) return; // the hero pins itself (HeroVideos)
 
           // resources: pinned horizontal scroll
           if (el.classList.contains("pa-hscroll") && track) {
@@ -288,16 +289,27 @@ function Page() {
       <SiteHeader home />
 
       <main id="main">
-        <section className="pa-hero pa-layer" id="top">
-          <HeroScene />
+        <section className="pa-hero pa-layer" id="top" data-slider>
+          <HeroVideos stepLabel={t.hero.step} />
           <div className="pa-wrap pa-hero-grid">
-            <div>
-              <p className="pa-eyebrow">{t.hero.eyebrow}</p>
-              <h1>
-                {t.hero.before}
-                <em>{t.hero.em}</em>
-              </h1>
-              <p className="pa-lead">{t.hero.lead}</p>
+            <div className="pa-hero-copy">
+              <div className="pa-slides">
+                <div className="pa-slide">
+                  <p className="pa-eyebrow">{t.hero.eyebrow}</p>
+                  <h1>
+                    {t.hero.before}
+                    <em>{t.hero.em}</em>
+                  </h1>
+                  <p className="pa-lead">{t.hero.lead}</p>
+                </div>
+                {t.hero.slides.map((sl) => (
+                  <div className="pa-slide" key={sl.title}>
+                    <p className="pa-eyebrow">{sl.eyebrow}</p>
+                    <h2 className="pa-slide-h">{sl.title}</h2>
+                    <p className="pa-lead">{sl.lead}</p>
+                  </div>
+                ))}
+              </div>
               <div className="pa-hero-actions">
                 <Magnet padding={60} magnetStrength={3}>
                   <a className="pa-btn-explore" href="#resources">
