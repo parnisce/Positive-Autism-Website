@@ -16,11 +16,27 @@ function send(data: Record<string, unknown>) {
   }
 }
 
-export const trackEvent = (e: { e: "cart"; id: number }) => {
+export const trackEvent = (e: { e: "cart"; id: number } | { e: "act"; k: string }) => {
   if (typeof window !== "undefined") send(e);
 };
 
+/** Counts clicks on links that leave the site. */
+function useOutsideLinks() {
+  useEffect(() => {
+    const on = (ev: MouseEvent) => {
+      const a = (ev.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
+      if (!a) return;
+      if (a.protocol === "mailto:") return trackEvent({ e: "act", k: "Email link clicked" });
+      if (/^https?:$/.test(a.protocol) && a.hostname !== location.hostname)
+        trackEvent({ e: "act", k: `Outside link clicked · ${a.hostname.replace(/^www\./, "")}`.slice(0, 80) });
+    };
+    document.addEventListener("click", on, { passive: true });
+    return () => document.removeEventListener("click", on);
+  }, []);
+}
+
 export function Tracker() {
+  useOutsideLinks();
   const path = useRouterState({ select: (s) => s.location.pathname });
   useEffect(() => {
     if (path.startsWith("/admin") || path.startsWith("/api")) return;
@@ -40,7 +56,13 @@ export function Tracker() {
         /* ignore */
       }
     }
-    send({ p: path, u: first ? 1 : 0, r: ref });
+    let m = "";
+    if (first) {
+      const q = new URLSearchParams(location.search);
+      const src = q.get("utm_source");
+      if (src) m = [src, q.get("utm_medium"), q.get("utm_campaign")].filter(Boolean).join(" / ");
+    }
+    send({ p: path, u: first ? 1 : 0, r: ref, m });
   }, [path]);
   return null;
 }

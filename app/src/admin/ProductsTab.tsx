@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { CATEGORIES, ORIGINAL, productHref, slugify, type Product, type ProductEdit } from "../shop/catalog";
 import { api, money, uploadImage } from "./api";
+import { isSale } from "./orders-types";
+import { num, useOrders, useStats } from "./ui";
 
 type Row = Product & { hidden: boolean; edited: boolean; custom: boolean; file: string; paras?: string[]; tags?: string[] };
 
@@ -57,6 +59,15 @@ export function ProductsTab() {
   const [cat, setCat] = useState("");
   const [page, setPage] = useState(0);
   const [editing, setEditing] = useState<Row | "new" | null>(null);
+  const [sort, setSort] = useState<"default" | "views" | "sold">("default");
+  const { s: stats } = useStats(30);
+  const orders = useOrders();
+  const views = useMemo(() => new Map((stats?.products ?? []).map((p) => [p.id, p.views])), [stats]);
+  const sold = useMemo(() => {
+    const m = new Map<number, number>();
+    for (const o of orders.orders) if (isSale(o)) for (const i of o.items) if (i.id != null) m.set(i.id, (m.get(i.id) ?? 0) + 1);
+    return m;
+  }, [orders.orders]);
 
   const load = () => api<{ edits: ProductEdit[] }>("products.list").then((r) => setEdits(r.edits));
   useEffect(() => {
@@ -64,13 +75,14 @@ export function ProductsTab() {
   }, []);
 
   const rows = useMemo(() => (edits ? mergeProducts(edits) : []), [edits]);
-  const list = rows.filter((r) => {
+  const filtered = rows.filter((r) => {
     if (filter === "edited" && !(r.edited && !r.custom)) return false;
     if (filter === "hidden" && !r.hidden) return false;
     if (filter === "new" && !r.custom) return false;
     if (cat && !r.cats.includes(cat)) return false;
     return !q || `${r.title} ${r.subtitle}`.toLowerCase().includes(q.toLowerCase());
   });
+  const list = sort === "default" ? filtered : [...filtered].sort((a, b) => (sort === "views" ? (views.get(b.id) ?? 0) - (views.get(a.id) ?? 0) : (sold.get(b.id) ?? 0) - (sold.get(a.id) ?? 0)));
   const pages = Math.max(1, Math.ceil(list.length / PAGE));
   const cur = Math.min(page, pages - 1);
 
@@ -109,6 +121,11 @@ export function ProductsTab() {
             </option>
           ))}
         </select>
+        <select className="ad-in" value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} aria-label="Sort">
+          <option value="default">Sort: shop order</option>
+          <option value="views">Sort: most viewed (30 days)</option>
+          <option value="sold">Sort: best selling</option>
+        </select>
         <div className="ad-seg">
           {(["all", "edited", "hidden", "new"] as const).map((f) => (
             <button key={f} className={filter === f ? "on" : ""} onClick={() => (setFilter(f), setPage(0))}>
@@ -129,6 +146,9 @@ export function ProductsTab() {
             {r.hidden && <span className="ad-pill">Hidden</span>}
             {r.edited && !r.custom && !r.hidden && <span className="ad-pill warn">Changed</span>}
             {r.file && <span className="ad-pill">File</span>}
+            <span className="ad-metric" title="Page views in the last 30 days and copies sold">
+              {num(views.get(r.id) ?? 0)} views · {num(sold.get(r.id) ?? 0)} sold
+            </span>
             <b className="ad-price">{money(r.price)}</b>
           </button>
         ))}

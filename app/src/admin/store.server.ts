@@ -156,7 +156,7 @@ export async function fetchStats(from: string) {
   const out: { day: string; kind: string; key: string; n: number }[] = [];
   for (let page = 0; page < 30; page++) {
     const r = await rest<typeof out>(
-      `stats?select=day,kind,key,n&day=gte.${from}&kind=in.(page,visit,cart,buy,ref,country)&order=day.asc,kind.asc,key.asc`,
+      `stats?select=day,kind,key,n&day=gte.${from}&kind=in.(page,visit,cart,buy,ref,country,device,action,utm)&order=day.asc,kind.asc,key.asc`,
       { admin: true, range: [page * 1000, page * 1000 + 999] },
     );
     out.push(...r);

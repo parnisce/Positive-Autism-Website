@@ -1,20 +1,39 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { ORIGINAL, productHref, type ProductEdit } from "../shop/catalog";
-import { api, getStatus, money, type Setup, type Status } from "./api";
+import { productHref, ORIGINAL, type ProductEdit } from "../shop/catalog";
+import { AnalyticsTab } from "./AnalyticsTab";
+import { api, getStatus, type Setup, type Status } from "./api";
 import { BlogTab } from "./BlogTab";
 import { ContentTab } from "./ContentTab";
+import { OrdersTab } from "./OrdersTab";
+import { isSale } from "./orders-types";
 import { mergeProducts, ProductsTab } from "./ProductsTab";
+import { ReportsTab } from "./ReportsTab";
 import { SCHEMA_SQL } from "./schema-sql";
+import { BarChart, Card, Kpi, OrdersNotice, StatusPill, cash, num, pct, shortDay, useOrders, useStats, when } from "./ui";
 import "./admin.css";
 
-type Tab = "overview" | "pages" | "blog" | "ebooks" | "settings";
-const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: "overview", label: "Overview", icon: "▦" },
-  { id: "pages", label: "Pages and text", icon: "✎" },
-  { id: "blog", label: "Blog", icon: "❝" },
-  { id: "ebooks", label: "Ebooks", icon: "▤" },
-  { id: "settings", label: "Settings", icon: "⚙" },
+type Tab = "dashboard" | "orders" | "ebooks" | "reports" | "analytics" | "blog" | "pages" | "settings";
+const GROUPS: { title: string; tabs: { id: Tab; label: string; icon: string }[] }[] = [
+  { title: "", tabs: [{ id: "dashboard", label: "Dashboard", icon: "◧" }] },
+  {
+    title: "Store",
+    tabs: [
+      { id: "orders", label: "Orders", icon: "🧾" },
+      { id: "ebooks", label: "Ebooks", icon: "📚" },
+      { id: "reports", label: "Reports", icon: "📈" },
+    ],
+  },
+  {
+    title: "Website",
+    tabs: [
+      { id: "analytics", label: "Analytics", icon: "📊" },
+      { id: "blog", label: "Blog", icon: "✍" },
+      { id: "pages", label: "Pages and text", icon: "📝" },
+    ],
+  },
+  { title: "", tabs: [{ id: "settings", label: "Settings", icon: "⚙" }] },
 ];
+const ALL = GROUPS.flatMap((g) => g.tabs.map((t) => t.id));
 
 export function AdminApp() {
   const [st, setSt] = useState<Status | null>(null);
@@ -72,7 +91,7 @@ function Login({ onDone }: { onDone: () => void }) {
   return (
     <div className="ad ad-center">
       <form className="ad-card narrow" onSubmit={go}>
-        <img src="/assets/img/logo.png" alt="Positive Autism" width={190} height={48} />
+        <img className="ad-logo" src="/assets/img/logo.png" alt="Positive Autism" width={190} height={48} />
         <h1>Admin sign in</h1>
         <label>
           <span>Password</span>
@@ -88,10 +107,13 @@ function Login({ onDone }: { onDone: () => void }) {
 }
 
 function Shell({ setup, onOut }: { setup: Setup; onOut: () => void }) {
-  const [tab, setTab] = useState<Tab>(() => (typeof location !== "undefined" && (location.hash.slice(1) as Tab)) || "overview");
+  const [tab, setTab] = useState<Tab>(() => {
+    const h = typeof location !== "undefined" ? (location.hash.replace(/^#\/?/, "") as Tab) : "dashboard";
+    return ALL.includes(h) ? h : "dashboard";
+  });
   useEffect(() => {
     history.replaceState(null, "", `#${tab}`);
-    window.scrollTo(0, 0);
+    document.querySelector(".ad-main")?.scrollTo(0, 0);
   }, [tab]);
   const ready = setup.db && setup.adminKey;
   async function out() {
@@ -105,11 +127,16 @@ function Shell({ setup, onOut }: { setup: Setup; onOut: () => void }) {
           <img src="/assets/img/logo.png" alt="Positive Autism" width={150} height={38} />
         </a>
         <nav>
-          {TABS.map((t) => (
-            <button key={t.id} className={tab === t.id ? "on" : ""} onClick={() => setTab(t.id)}>
-              <i aria-hidden="true">{t.icon}</i>
-              {t.label}
-            </button>
+          {GROUPS.map((g, i) => (
+            <div key={i} className="ad-navgroup">
+              {g.title && <small>{g.title}</small>}
+              {g.tabs.map((t) => (
+                <button key={t.id} className={tab === t.id ? "on" : ""} onClick={() => setTab(t.id)}>
+                  <i aria-hidden="true">{t.icon}</i>
+                  {t.label}
+                </button>
+              ))}
+            </div>
           ))}
         </nav>
         <div className="ad-nav-foot">
@@ -120,11 +147,14 @@ function Shell({ setup, onOut }: { setup: Setup; onOut: () => void }) {
         </div>
       </aside>
       <main className="ad-main">
-        {!ready && tab !== "settings" ? <NoDb go={() => setTab("settings")} /> : null}
-        {ready && tab === "overview" && <Overview />}
-        {ready && tab === "pages" && <ContentTab />}
-        {ready && tab === "blog" && <BlogTab />}
+        {!ready && tab !== "settings" && tab !== "orders" && tab !== "reports" ? <NoDb go={() => setTab("settings")} /> : null}
+        {ready && tab === "dashboard" && <Dashboard go={setTab} />}
+        {tab === "orders" && <OrdersTab />}
         {ready && tab === "ebooks" && <ProductsTab />}
+        {tab === "reports" && <ReportsTab />}
+        {ready && tab === "analytics" && <AnalyticsTab />}
+        {ready && tab === "blog" && <BlogTab />}
+        {ready && tab === "pages" && <ContentTab />}
         {tab === "settings" && <Settings setup={setup} />}
       </main>
     </div>
@@ -145,188 +175,142 @@ function NoDb({ go }: { go: () => void }) {
   );
 }
 
-type Stats = {
-  totals: { views: number; visitors: number; productViews: number; cart: number; buy: number };
-  daily: { day: string; views: number; visitors: number }[];
-  pages: { key: string; n: number }[];
-  products: { id: number; views: number; cart: number; buy: number }[];
-  refs: { key: string; n: number }[];
-  countries: { key: string; n: number }[];
-};
-
-const num = (n: number) => new Intl.NumberFormat("en").format(n);
-
-function Overview() {
-  const [days, setDays] = useState(30);
-  const [s, setS] = useState<Stats | null>(null);
+function Dashboard({ go }: { go: (t: Tab) => void }) {
+  const orders = useOrders();
+  const { s } = useStats(30);
   const [edits, setEdits] = useState<ProductEdit[]>([]);
-  const [err, setErr] = useState("");
-  useEffect(() => {
-    setS(null);
-    api<Stats>("stats", { days }).then(setS).catch(() => setErr("Could not load the numbers."));
-  }, [days]);
   useEffect(() => {
     api<{ edits: ProductEdit[] }>("products.list").then((r) => setEdits(r.edits)).catch(() => {});
   }, []);
   const names = useMemo(() => new Map(mergeProducts(edits).map((p) => [p.id, p])), [edits]);
-  const max = Math.max(1, ...(s?.daily.map((d) => d.views) ?? [1]));
+
+  const d = useMemo(() => {
+    const from = Date.now() - 30 * 86400000;
+    const recent = orders.orders.filter((o) => o.created >= from);
+    const sales = recent.filter(isSale);
+    const gross = sales.reduce((a, o) => a + o.total, 0);
+    const refunds = sales.reduce((a, o) => a + o.refunded, 0);
+    const byDay = new Map<string, number>();
+    for (let i = 0; i < 30; i++) byDay.set(new Date(Date.now() - (29 - i) * 86400000).toISOString().slice(0, 10), 0);
+    for (const o of sales) {
+      const k = new Date(o.created).toISOString().slice(0, 10);
+      if (byDay.has(k)) byDay.set(k, (byDay.get(k) ?? 0) + o.total - o.refunded);
+    }
+    return { sales, net: gross - refunds, gross, byDay: [...byDay], pending: orders.orders.filter((o) => o.status === "pending").length };
+  }, [orders.orders]);
 
   return (
     <div className="ad-page">
       <header className="ad-head">
         <div>
-          <h1>Overview</h1>
-          <p>See which pages and ebooks visitors look at the most. Your own visits from this browser are not counted.</p>
-        </div>
-        <div className="ad-seg" role="group" aria-label="Period">
-          {[7, 30, 90].map((d) => (
-            <button key={d} className={days === d ? "on" : ""} onClick={() => setDays(d)}>
-              {d} days
-            </button>
-          ))}
+          <h1>Dashboard</h1>
+          <p>The last 30 days at a glance: sales, orders, visitors and what needs attention.</p>
         </div>
       </header>
-      {err && <p className="ad-note">{err}</p>}
-      {!s && !err && <p className="ad-note">Loading…</p>}
-      {s && (
-        <>
-          <div className="ad-kpis">
-            <Kpi label="Page views" v={s.totals.views} />
-            <Kpi label="Visitors" v={s.totals.visitors} hint="visits, one per browsing session" />
-            <Kpi label="Ebook page views" v={s.totals.productViews} />
-            <Kpi label="Added to cart" v={s.totals.cart} />
-            <Kpi label="Started checkout" v={s.totals.buy} />
+      <OrdersNotice o={orders} />
+      <div className="ad-kpis">
+        <Kpi label="Net sales" value={orders.state === "ok" ? cash(d.net) : "—"} sub={orders.state === "ok" ? `${cash(d.gross)} gross` : "connect Stripe"} />
+        <Kpi label="Orders" value={orders.state === "ok" ? num(d.sales.length) : "—"} sub="paid in 30 days" />
+        <Kpi label="Visits" value={s ? num(s.totals.visitors) : "…"} sub={s ? `${num(s.totals.views)} page views` : ""} />
+        <Kpi label="Conversion" value={s && orders.state === "ok" ? pct(d.sales.length, s.totals.visitors) : "—"} sub="visits that paid" />
+        <Kpi label="Average order" value={orders.state === "ok" ? cash(d.sales.length ? Math.round(d.gross / d.sales.length) : 0) : "—"} sub="per paid order" />
+      </div>
+
+      <div className="ad-grid2">
+        <Card title="Sales per day" note="Net of refunds">
+          <BarChart label="Sales per day" data={d.byDay.map(([day, v]) => ({ key: day, v, tip: `${shortDay(day)}: ${cash(v)}` }))} />
+          <div className="ad-axis">
+            <span>{shortDay(d.byDay[0][0])}</span>
+            <span>{shortDay(d.byDay[d.byDay.length - 1][0])}</span>
           </div>
+        </Card>
+        <Card title="Needs attention">
+          <ul className="ad-todo">
+            <li>
+              <b>{d.pending}</b> order{d.pending === 1 ? "" : "s"} waiting for payment
+              <button className="ad-link" onClick={() => go("orders")}>
+                View
+              </button>
+            </li>
+            <li>
+              <b>{orders.orders.filter((o) => o.status === "partial" || o.status === "refunded").length}</b> refunded order(s)
+              <button className="ad-link" onClick={() => go("orders")}>
+                View
+              </button>
+            </li>
+            <li>
+              <b>{orders.orders.filter((o) => o.status === "expired").length}</b> abandoned checkout(s)
+              <button className="ad-link" onClick={() => go("reports")}>
+                Report
+              </button>
+            </li>
+          </ul>
+        </Card>
+      </div>
 
-          <section className="ad-card">
-            <h2>Views per day</h2>
-            <div className="ad-chart" role="img" aria-label="Daily page views">
-              {s.daily.map((d) => (
-                <div key={d.day} className="ad-bar" title={`${d.day}: ${d.views} views, ${d.visitors} visitors`}>
-                  <i style={{ height: `${Math.max(2, (d.views / max) * 100)}%` }} />
-                </div>
-              ))}
-            </div>
-            <div className="ad-axis">
-              <span>{s.daily[0]?.day}</span>
-              <span>{s.daily[s.daily.length - 1]?.day}</span>
-            </div>
-          </section>
-
-          <div className="ad-two">
-            <section className="ad-card">
-              <h2>Most viewed ebooks</h2>
-              {s.products.length === 0 && <p className="ad-empty">No ebook views yet.</p>}
-              <table className="ad-table">
-                <thead>
-                  <tr>
-                    <th>Ebook</th>
-                    <th>Views</th>
-                    <th>Cart</th>
-                    <th>Checkout</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {s.products.map((p) => {
-                    const info = names.get(p.id) ?? ORIGINAL.find((o) => o.id === p.id);
-                    return (
-                      <tr key={p.id}>
-                        <td>
-                          {info ? (
-                            <a href={productHref(info)} target="_blank" rel="noreferrer">
-                              {info.title}
-                            </a>
-                          ) : (
-                            `Ebook ${p.id} (removed)`
-                          )}
-                          {info && <small>{money(info.price)}</small>}
-                        </td>
-                        <td>{num(p.views)}</td>
-                        <td>{num(p.cart)}</td>
-                        <td>{num(p.buy)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </section>
-            <section className="ad-card">
-              <h2>Most viewed pages</h2>
-              {s.pages.length === 0 && <p className="ad-empty">No page views yet. They appear as visitors browse the site.</p>}
-              <Bars rows={s.pages.map((p) => ({ label: p.key === "/" ? "Home" : p.key.replace(/^\/shop\/ebook\/(.*)-\d+$/, "Ebook: $1"), n: p.n, href: p.key }))} />
-            </section>
-          </div>
-          <div className="ad-two">
-            <section className="ad-card">
-              <h2>Where visitors come from</h2>
-              {s.refs.length === 0 ? <p className="ad-empty">Direct visits only so far.</p> : <Bars rows={s.refs.map((r) => ({ label: r.key, n: r.n }))} />}
-            </section>
-            <section className="ad-card">
-              <h2>Countries</h2>
-              {s.countries.length === 0 ? <p className="ad-empty">No data yet.</p> : <Bars rows={s.countries.map((r) => ({ label: countryName(r.key), n: r.n }))} />}
-            </section>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-const countryName = (cc: string) => {
-  try {
-    return new Intl.DisplayNames(["en"], { type: "region" }).of(cc) || cc;
-  } catch {
-    return cc;
-  }
-};
-
-function Kpi({ label, v, hint }: { label: string; v: number; hint?: string }) {
-  return (
-    <div className="ad-kpi" title={hint}>
-      <strong>{num(v)}</strong>
-      <span>{label}</span>
-    </div>
-  );
-}
-
-function Bars({ rows }: { rows: { label: string; n: number; href?: string }[] }) {
-  const max = Math.max(1, ...rows.map((r) => r.n));
-  return (
-    <ul className="ad-bars">
-      {rows.map((r) => (
-        <li key={r.label}>
-          <span className="ad-bars-fill" style={{ width: `${(r.n / max) * 100}%` }} />
-          {r.href ? (
-            <a href={r.href} target="_blank" rel="noreferrer">
-              {r.label}
-            </a>
+      <div className="ad-grid2">
+        <Card title="Recent orders">
+          {orders.orders.length === 0 ? (
+            <p className="ad-empty">No orders yet.</p>
           ) : (
-            <span>{r.label}</span>
+            <table className="ad-table">
+              <tbody>
+                {orders.orders.slice(0, 6).map((o) => (
+                  <tr key={o.id}>
+                    <td>
+                      {o.name || o.email || "Guest"}
+                      <small>{when(o.created)}</small>
+                    </td>
+                    <td>
+                      <StatusPill s={o.status} />
+                    </td>
+                    <td>{cash(o.total, o.currency)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
-          <b>{num(r.n)}</b>
-        </li>
-      ))}
-    </ul>
+          <button className="ad-link" onClick={() => go("orders")}>
+            All orders →
+          </button>
+        </Card>
+        <Card title="Most viewed ebooks" note="Last 30 days">
+          {!s || s.products.length === 0 ? (
+            <p className="ad-empty">No ebook views yet.</p>
+          ) : (
+            <table className="ad-table">
+              <tbody>
+                {s.products.slice(0, 6).map((p) => {
+                  const info = names.get(p.id) ?? ORIGINAL.find((o) => o.id === p.id);
+                  return (
+                    <tr key={p.id}>
+                      <td>
+                        {info ? (
+                          <a href={productHref(info)} target="_blank" rel="noreferrer">
+                            {info.title}
+                          </a>
+                        ) : (
+                          `Ebook ${p.id}`
+                        )}
+                      </td>
+                      <td>{num(p.views)} views</td>
+                      <td>{num(p.cart)} in cart</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+          <button className="ad-link" onClick={() => go("analytics")}>
+            Full analytics →
+          </button>
+        </Card>
+      </div>
+    </div>
   );
 }
 
 function Settings({ setup }: { setup: Setup }) {
-  const [track, setTrack] = useState(() => {
-    try {
-      return !localStorage.getItem("pa-notrack");
-    } catch {
-      return true;
-    }
-  });
-  const flip = () => {
-    try {
-      if (track) localStorage.setItem("pa-notrack", "1");
-      else localStorage.removeItem("pa-notrack");
-    } catch {
-      /* ignore */
-    }
-    setTrack(!track);
-  };
   return (
     <div className="ad-page">
       <header className="ad-head">
@@ -335,8 +319,7 @@ function Settings({ setup }: { setup: Setup }) {
           <p>Connection status and setup steps.</p>
         </div>
       </header>
-      <section className="ad-card">
-        <h2>Status</h2>
+      <Card title="Status">
         <ul className="ad-status">
           <li className="ok">Admin password is set</li>
           <li className={setup.db ? "ok" : "bad"}>Database tables {setup.db ? "found" : "not created yet"}</li>
@@ -345,10 +328,9 @@ function Settings({ setup }: { setup: Setup }) {
             Stripe payments: {setup.stripe ? `${setup.stripe === "live" ? "live" : "test (sandbox)"} key found` : "no key found"}
           </li>
         </ul>
-      </section>
+      </Card>
       {!(setup.db && setup.adminKey) && (
-        <section className="ad-card">
-          <h2>Connect Supabase (about 3 minutes)</h2>
+        <Card title="Connect Supabase (about 3 minutes)">
           <ol className="ad-steps">
             <li>
               In Supabase open your project, then <b>SQL Editor → New query</b>. Paste the setup script below and press <b>Run</b>. It creates the tables and keeps them private.
@@ -367,16 +349,13 @@ function Settings({ setup }: { setup: Setup }) {
               Open <b>Deployments</b>, then the latest one, and press <b>Retry deployment</b>. Reload this page when it finishes.
             </li>
           </ol>
-        </section>
+        </Card>
       )}
-      <section className="ad-card">
-        <h2>This browser</h2>
-        <label className="ad-check">
-          <input type="checkbox" checked={!track} onChange={flip} />
-          Do not count my own visits in the analytics
-        </label>
-        <p className="ad-fine">To change the admin password, edit the ADMIN_PASSWORD secret in Cloudflare and redeploy. Everyone signed in is signed out.</p>
-      </section>
+      <Card title="Good to know">
+        <p className="ad-fine">
+          Orders are read live from Stripe, so refunds and payment status always match your Stripe dashboard. To change the admin password, edit the ADMIN_PASSWORD secret in Cloudflare and redeploy. Everyone signed in is signed out.
+        </p>
+      </Card>
     </div>
   );
 }

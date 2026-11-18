@@ -7,7 +7,7 @@ import { productFromSlug } from "../shop/catalog";
 const BOT = /bot|crawl|spider|slurp|preview|headless|lighthouse|monitor|curl|wget|python|node-fetch/i;
 const STATIC = new Set(["/", "/shop", "/blog", "/shop/success", "/privacy-policy", "/terms-and-conditions", "/user-data-management"]);
 
-type Hit = { p?: unknown; e?: unknown; id?: unknown; u?: unknown; r?: unknown };
+type Hit = { p?: unknown; e?: unknown; id?: unknown; u?: unknown; r?: unknown; k?: unknown; m?: unknown };
 
 const up = (day: string, kind: string, key: string) => ({ day, kind, key });
 
@@ -25,6 +25,8 @@ export async function recordHit(request: Request): Promise<void> {
 
   if (b.e === "cart" && Number.isInteger(b.id)) {
     stmts.push(up(day, "cart", String(b.id)));
+  } else if (b.e === "act" && typeof b.k === "string" && /^[^\u0000-\u001f]{3,80}$/.test(b.k)) {
+    stmts.push(up(day, "action", b.k));
   } else if (typeof b.p === "string") {
     const path = b.p.split("?")[0].split("#")[0].replace(/\/+$/, "") || "/";
     let ok = STATIC.has(path) || /^\/blog\/[a-z0-9-]{1,100}$/.test(path);
@@ -34,6 +36,9 @@ export async function recordHit(request: Request): Promise<void> {
     stmts.push(up(day, "page", path));
     if (b.u === 1) {
       stmts.push(up(day, "visit", ""));
+      const ua = request.headers.get("user-agent") || "";
+      stmts.push(up(day, "device", /ipad|tablet/i.test(ua) ? "Tablet" : /mobi|android|iphone/i.test(ua) ? "Mobile" : "Desktop"));
+      if (typeof b.m === "string" && /^[\w .\/-]{2,80}$/.test(b.m)) stmts.push(up(day, "utm", b.m));
       const cc = request.headers.get("cf-ipcountry");
       if (cc && /^[A-Z]{2}$/.test(cc)) stmts.push(up(day, "country", cc));
       if (typeof b.r === "string" && /^[a-z0-9.-]{3,80}$/i.test(b.r)) stmts.push(up(day, "ref", b.r.toLowerCase()));

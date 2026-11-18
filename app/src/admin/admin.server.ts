@@ -6,6 +6,7 @@ import { CATEGORIES, ORIGINAL, slugify, type ProductEdit } from "../shop/catalog
 import { bustSiteData } from "./data.server";
 import { envVar, today } from "./db.server";
 import * as store from "./store.server";
+import { fetchOrders, OrdersError } from "./orders.server";
 import { flattenCopy, type ContentOverrides } from "./site-data";
 
 const COOKIE = "pa_admin";
@@ -98,6 +99,14 @@ export async function handleAdmin(request: Request): Promise<Response> {
 
 async function run(action: string, body: Record<string, unknown>): Promise<Response> {
   switch (action) {
+    case "orders": {
+      try {
+        return json({ ok: true, ...(await fetchOrders(body.force === true)) });
+      } catch (e) {
+        if (e instanceof OrdersError) return json({ ok: false, error: e.code, message: e.message });
+        throw e;
+      }
+    }
     case "stats":
       return json(await stats(Math.min(90, Math.max(1, Number(body.days) || 30))));
 
@@ -207,6 +216,9 @@ async function stats(days: number) {
   const prod = new Map<number, { views: number; cart: number; buy: number }>();
   const refs = new Map<string, number>();
   const countries = new Map<string, number>();
+  const devices = new Map<string, number>();
+  const actions = new Map<string, number>();
+  const utm = new Map<string, number>();
   const bump = <K,>(m: Map<K, number>, k: K, n: number) => m.set(k, (m.get(k) ?? 0) + n);
   const p = (id: number) => {
     if (!prod.has(id)) prod.set(id, { views: 0, cart: 0, buy: 0 });
@@ -230,6 +242,9 @@ async function stats(days: number) {
     else if (r.kind === "buy") p(Number(r.key)).buy += r.n;
     else if (r.kind === "ref") bump(refs, r.key, r.n);
     else if (r.kind === "country") bump(countries, r.key, r.n);
+    else if (r.kind === "device") bump(devices, r.key, r.n);
+    else if (r.kind === "action") bump(actions, r.key, r.n);
+    else if (r.kind === "utm") bump(utm, r.key, r.n);
   }
   const top = <K,>(m: Map<K, number>, n: number) => [...m].sort((a, b) => b[1] - a[1]).slice(0, n);
   const all = [...prod].map(([id, v]) => ({ id, ...v }));
@@ -248,6 +263,9 @@ async function stats(days: number) {
     products,
     refs: top(refs, 8).map(([key, n]) => ({ key, n })),
     countries: top(countries, 8).map(([key, n]) => ({ key, n })),
+    devices: top(devices, 5).map(([key, n]) => ({ key, n })),
+    actions: top(actions, 8).map(([key, n]) => ({ key, n })),
+    utm: top(utm, 8).map(([key, n]) => ({ key, n })),
     today: today(),
   };
 }
