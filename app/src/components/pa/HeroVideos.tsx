@@ -21,6 +21,7 @@ export function HeroVideos({ stepLabel }: { stepLabel: string }) {
     gsap.registerPlugin(ScrollTrigger);
     const videos = [...el.querySelectorAll<HTMLVideoElement>("video")];
     const slides = [...hero.querySelectorAll<HTMLElement>(".pa-slide")];
+    const actions = hero.querySelector<HTMLElement>(".pa-hero-actions");
     const steps = [...hero.querySelectorAll<HTMLElement>(".pa-hero-step")];
     const mm = gsap.matchMedia();
 
@@ -43,8 +44,12 @@ export function HeroVideos({ stepLabel }: { stepLabel: string }) {
         // stop-motion style: a short, snappy cross-fade
         gsap.to(videos[prev], { autoAlpha: 0, duration: 0.35, ease: "steps(4)", overwrite: true });
         gsap.to(videos[i], { autoAlpha: 1, duration: 0.35, ease: "steps(4)", overwrite: true });
-        gsap.to(slides[prev], { autoAlpha: 0, y: -24, duration: 0.3, ease: "power2.in", overwrite: true });
-        gsap.fromTo(slides[i], { autoAlpha: 0, y: 36 }, { autoAlpha: 1, y: 0, duration: 0.6, delay: 0.18, ease: "power3.out", overwrite: true });
+        // text alternates sides: slides 1 and 3 sit on the left, 2 and 4 on the right
+        const dir = (n: number) => (n % 2 ? 1 : -1);
+        hero.classList.toggle("is-right", i % 2 === 1);
+        gsap.to(slides[prev], { autoAlpha: 0, x: dir(prev) * 70, duration: 0.3, ease: "power2.in", overwrite: true });
+        gsap.fromTo(slides[i], { autoAlpha: 0, x: dir(i) * 90 }, { autoAlpha: 1, x: 0, duration: 0.65, delay: 0.18, ease: "power3.out", overwrite: true });
+        if (actions) gsap.fromTo(actions, { autoAlpha: 0, x: dir(i) * 60 }, { autoAlpha: 1, x: 0, duration: 0.6, delay: 0.25, ease: "power3.out", overwrite: true });
         steps.forEach((s, n) => s.classList.toggle("on", n === i));
       };
 
@@ -86,8 +91,8 @@ export function HeroVideos({ stepLabel }: { stepLabel: string }) {
       return () => {
         steps.forEach((s) => s.removeEventListener("click", go));
         trigger.kill();
-        hero.classList.remove("is-sliding");
-        gsap.set([...videos, ...slides], { clearProps: "all" });
+        hero.classList.remove("is-sliding", "is-right");
+        gsap.set([...videos, ...slides, ...(actions ? [actions] : [])], { clearProps: "all" });
         steps.forEach((s, n) => s.classList.toggle("on", n === 0));
       };
     });
@@ -110,6 +115,7 @@ export function HeroVideos({ stepLabel }: { stepLabel: string }) {
           />
         ))}
         <span className="pa-hero-veil" />
+        <span className="pa-hero-veil r" />
       </div>
       <ol className="pa-hero-steps" aria-label={stepLabel}>
         {Array.from({ length: HERO_SLIDES }, (_, i) => (
