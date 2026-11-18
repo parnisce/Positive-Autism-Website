@@ -5,6 +5,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 export const HERO_SLIDES = 4;
 /** Frames per second of the "stop motion" while scrolling: the video only advances in these small steps. */
 const STEP_FPS = 9;
+/** Where each clip starts (as a share of its length). Slide 1 opens on the sun and flowers, not the empty hills. */
+const START = [0.86, 0, 0, 0];
 
 /**
  * Hero background: four hyperlapse clips. The hero stays pinned while you scroll; the scroll position
@@ -35,6 +37,14 @@ export function HeroVideos({ stepLabel }: { stepLabel: string }) {
       gsap.set(slides[0], { autoAlpha: 1 });
       gsap.set(videos, { autoAlpha: 0 });
       gsap.set(videos[0], { autoAlpha: 1 });
+
+      // open on the sun and flowers
+      const first = videos[0];
+      const seekFirst = () => {
+        if (first.duration) first.currentTime = START[0] * first.duration;
+      };
+      if (first.readyState >= 1) seekFirst();
+      else first.addEventListener("loadedmetadata", seekFirst, { once: true });
 
       let cur = 0;
       const show = (i: number) => {
@@ -71,7 +81,8 @@ export function HeroVideos({ stepLabel }: { stepLabel: string }) {
           const d = v.duration;
           if (!d || !Number.isFinite(d)) return;
           // quantise to a few frames per second so it ticks like stop motion, and play forward as you scroll
-          const t = Math.min(d - 0.05, Math.floor((p - i) * d * STEP_FPS) / STEP_FPS);
+          const from = START[i] * d;
+          const t = Math.min(d - 0.05, Math.floor((from + (p - i) * (d - from)) * STEP_FPS) / STEP_FPS);
           if (Math.abs(v.currentTime - t) > 0.01) v.currentTime = t;
           // a slow push-in on top of the footage reinforces the hyperlapse feel
           gsap.set(v, { scale: 1 + (p - i) * 0.12 });
