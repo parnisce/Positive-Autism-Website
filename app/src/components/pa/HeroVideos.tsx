@@ -5,8 +5,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 export const HERO_SLIDES = 4;
 /** Frames per second of the "stop motion" while scrolling: the video only advances in these small steps. */
 const STEP_FPS = 9;
-/** Where each clip starts (as a share of its length). Slide 1 opens on the sun and flowers, not the empty hills. */
-const START = [0.86, 0, 0, 0];
+/** Where each clip starts (as a share of its length). Every clip plays from its first frame. */
+const START = [0, 0, 0, 0];
 
 /**
  * Hero background: four hyperlapse clips. The hero stays pinned while you scroll; the scroll position
@@ -66,7 +66,7 @@ export function HeroVideos({ stepLabel }: { stepLabel: string }) {
       const trigger = ScrollTrigger.create({
         trigger: hero,
         start: "top top",
-        end: () => `+=${Math.round(window.innerHeight * HERO_SLIDES * 0.85)}`,
+        end: () => `+=${Math.round(window.innerHeight * HERO_SLIDES * 1.05)}`,
         pin: true,
         pinSpacing: true,
         anticipatePin: 1,
