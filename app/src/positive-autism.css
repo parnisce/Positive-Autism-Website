@@ -98,8 +98,8 @@
 .pa-hero-actions { display: flex; flex-wrap: wrap; gap: 14px; }
 
 /* hero video slider: four hyperlapse clips scrubbed by scroll */
-.pa-hero-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform-origin: 60% 50%; will-change: transform, opacity; }
-.pa-hero:not(.is-sliding) .pa-hero-media video:not(:first-child) { display: none; }
+.pa-hero-media video, .pa-hero-media canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform-origin: 60% 50%; will-change: transform, opacity; }
+.pa-hero:not(.is-sliding) .pa-hero-media video:not(:first-child), .pa-hero:not(.is-sliding) .pa-hero-media canvas:not(:first-child) { display: none; }
 /* a soft wash only behind the text side, so the footage stays clear */
 .pa-hero-veil { position: absolute; inset: 0; opacity: 1; transition: opacity .7s ease; background: linear-gradient(90deg, rgba(5, 20, 24, .74) 0%, rgba(5, 20, 24, .5) 34%, rgba(5, 20, 24, .14) 62%, transparent 82%); }
 .pa-hero-veil.r { opacity: 0; background: linear-gradient(270deg, rgba(5, 20, 24, .74) 0%, rgba(5, 20, 24, .5) 34%, rgba(5, 20, 24, .14) 62%, transparent 82%); }
@@ -510,3 +510,5 @@ button.pa-btn-watch { background: transparent; color: var(--pa-text); font-famil
 html.pa-film-open { overflow: hidden; }
 @keyframes pa-film-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes pa-film-pop { from { opacity: 0; transform: translateY(24px) scale(.96); } to { opacity: 1; transform: none; } }
+
+.pa-hero-media canvas { background-size: cover; background-position: center; }

@@ -3,6 +3,9 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export const HERO_SLIDES = 4;
+/** Frames extracted from each clip (public/assets/hero/f1..f4/01.webp ...). Drawing frames never waits on video seeking. */
+const FRAMES = 48;
+const frameUrl = (clip: number, i: number) => `/assets/hero/f${clip + 1}/${String(i + 1).padStart(2, "0")}.webp`;
 /** Share of a slide used to cross-fade into the next one. */
 const FADE = 0.28;
 /** How long (in viewport heights) each slide holds while scrolling. */
@@ -24,7 +27,7 @@ export function HeroVideos({ stepLabel, scrollLabel }: { stepLabel: string; scro
     const hero = el?.closest<HTMLElement>(".pa-hero");
     if (!el || !hero) return;
     gsap.registerPlugin(ScrollTrigger);
-    const videos = [...el.querySelectorAll<HTMLVideoElement>("video")];
+    const videos = [...el.querySelectorAll<HTMLCanvasElement>("canvas")];
     const slides = [...hero.querySelectorAll<HTMLElement>(".pa-slide")];
     const actions = hero.querySelector<HTMLElement>(".pa-hero-actions");
     const steps = [...hero.querySelectorAll<HTMLElement>(".pa-hero-step")];
@@ -83,16 +86,78 @@ export function HeroVideos({ stepLabel, scrollLabel }: { stepLabel: string; scro
         if (hint) hint.style.opacity = String(1 - clamp01(p * 6));
       };
 
-      // moves each visible clip to the frame that matches the scroll (retries until the clip has loaded)
-      const seek = () => {
-        for (let s = 0; s < N; s++) {
-          const v = videos[s];
-          const dur = v.duration;
-          if (v.style.visibility === "hidden" || !dur || !Number.isFinite(dur) || v.seeking) continue;
-          const t = Math.round(frac[s] * (dur - 0.06) * 24) / 24;
-          if (Math.abs(v.currentTime - t) > 0.03) v.currentTime = t;
+      // ---- frames: loaded clip by clip (first slide first), drawn straight onto the canvases ----
+      const W = 1280;
+      const H = 720;
+      const imgs: (HTMLImageElement | null)[][] = Array.from({ length: N }, () => new Array<HTMLImageElement | null>(FRAMES).fill(null));
+      const ctxs = videos.map((c) => {
+        c.width = W;
+        c.height = H;
+        return c.getContext("2d");
+      });
+      let dead = false;
+      const queue: [number, number][] = [];
+      // order: slide 1 fully, then the rest evenly (every 4th frame first so a rough version is ready early)
+      for (const pass of [4, 2, 1]) for (let c = 0; c < N; c++) for (let i = 0; i < FRAMES; i += pass) if (pass === 4 || i % (pass * 2) !== 0) queue.push([c, i]);
+      let qi = 0;
+      let inflight = 0;
+      const pump = () => {
+        while (!dead && inflight < 6 && qi < queue.length) {
+          const [c, i] = queue[qi++];
+          if (imgs[c][i]) continue;
+          inflight++;
+          const im = new Image();
+          im.decoding = "async";
+          im.onload = im.onerror = () => {
+            inflight--;
+            if (im.naturalWidth) {
+              imgs[c][i] = im;
+              drawn[c] = -1; // redraw this clip with the new frame
+            }
+            pump();
+          };
+          im.src = frameUrl(c, i);
         }
       };
+      const nearest = (c: number, i: number) => {
+        for (let k = 0; k < FRAMES; k++) {
+          const lo = imgs[c][i - k];
+          if (lo) return lo;
+          const hi = imgs[c][i + k];
+          if (hi) return hi;
+        }
+        return null;
+      };
+      const drawn = new Array<number>(N).fill(-2);
+      // draws clip c at fraction f (0..1), blending the two nearest frames so motion stays continuous
+      const draw = (c: number, f: number) => {
+        const ctx = ctxs[c];
+        if (!ctx) return;
+        const pos = f * (FRAMES - 1);
+        const key = Math.round(pos * 20) / 20;
+        if (drawn[c] === key) return;
+        drawn[c] = key;
+        const i0 = Math.min(FRAMES - 1, Math.floor(pos));
+        const i1 = Math.min(FRAMES - 1, i0 + 1);
+        const a0 = nearest(c, i0);
+        if (!a0) return;
+        ctx.globalAlpha = 1;
+        ctx.drawImage(a0, 0, 0, W, H);
+        const t = pos - i0;
+        const a1 = nearest(c, i1);
+        if (a1 && a1 !== a0 && t > 0.02) {
+          ctx.globalAlpha = t;
+          ctx.drawImage(a1, 0, 0, W, H);
+          ctx.globalAlpha = 1;
+        }
+      };
+      const seek = () => {
+        for (let s = 0; s < N; s++) {
+          if (videos[s].style.visibility === "hidden") continue;
+          draw(s, frac[s]);
+        }
+      };
+      pump();
 
       const trigger = ScrollTrigger.create({
         trigger: hero,
@@ -135,6 +200,7 @@ export function HeroVideos({ stepLabel, scrollLabel }: { stepLabel: string; scro
       return () => {
         steps.forEach((s) => s.removeEventListener("click", go));
         gsap.ticker.remove(tick);
+        dead = true;
         trigger.kill();
         hero.classList.remove("is-sliding", "is-right");
         [...videos, ...slides, ...(actions ? [actions] : [])].forEach((x) => x.removeAttribute("style"));
@@ -149,15 +215,7 @@ export function HeroVideos({ stepLabel, scrollLabel }: { stepLabel: string; scro
     <>
       <div className="pa-hero-media" ref={root} aria-hidden="true">
         {Array.from({ length: HERO_SLIDES }, (_, i) => (
-          <video
-            key={i}
-            src={`/assets/hero/slide-${i + 1}.mp4`}
-            poster={`/assets/hero/slide-${i + 1}.jpg`}
-            muted
-            playsInline
-            preload="auto"
-            tabIndex={-1}
-          />
+          <canvas key={i} width={1280} height={720} style={{ backgroundImage: `url(/assets/hero/slide-${i + 1}.jpg)` }} />
         ))}
         <span className="pa-hero-veil" />
         <span className="pa-hero-veil r" />
