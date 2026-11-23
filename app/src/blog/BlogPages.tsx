@@ -273,7 +273,7 @@ function ShareBar({ title, url }: { title: string; url: string }) {
   const [copied, setCopied] = useState(false);
   const enc = encodeURIComponent;
   return (
-    <div className="pa-share">
+    <div className="pa-share" id="share">
       <span>{t.blog.share}</span>
       <button
         type="button"
@@ -364,6 +364,29 @@ function PostBody({ post, related, categories, prev, next }: { post: PostFull | 
                   <time>{date}</time>
                   <span>{t.blog.minutes.replace("{n}", String(minutes(text)))}</span>
                 </div>
+                <aside className="pa-post-facts" aria-label={t.blog.facts}>
+                  <dl>
+                    <dt>{t.blog.pubOn}</dt>
+                    <dd>{date}</dd>
+                    <dt>{t.blog.readTime}</dt>
+                    <dd>{t.blog.minutes.replace("{n}", String(minutes(text)))}</dd>
+                    {post.cats.length > 0 && (
+                      <>
+                        <dt>{t.blog.filed}</dt>
+                        <dd className="is-cats">
+                          {post.cats.map((c) => tree.bySlug.get(c)).filter((c): c is BlogCategory => !!c).map((c) => (
+                            <Link key={c.slug} to="/blog/category/$slug" params={{ slug: c.slug }}>
+                              {c.name}
+                            </Link>
+                          ))}
+                        </dd>
+                      </>
+                    )}
+                  </dl>
+                  <a className="pa-facts-cta" href="#share">
+                    {t.blog.share} ↓
+                  </a>
+                </aside>
                 {post.cover && (
                   <figure className="pa-post-cover">
                     <img src={post.cover} alt="" />

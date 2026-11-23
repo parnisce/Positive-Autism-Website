@@ -65,6 +65,10 @@ const en = {
     newer: "Next article",
     stay: "Stay connected",
     topics: "Browse topics",
+    facts: "About this article",
+    pubOn: "Published",
+    readTime: "Reading time",
+    filed: "Filed under",
     notFound: "This article could not be found.",
   },
   hero: {
@@ -313,6 +317,10 @@ const es: Copy = {
     newer: "Artículo siguiente",
     stay: "Mantente en contacto",
     topics: "Explorar temas",
+    facts: "Sobre este artículo",
+    pubOn: "Publicado",
+    readTime: "Tiempo de lectura",
+    filed: "Archivado en",
     notFound: "No se encontró este artículo.",
   },
   hero: {

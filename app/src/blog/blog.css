@@ -100,3 +100,25 @@
 .pa-post-card .pa-btn-explore { font-size: 16px; padding: 13px 22px; }
 .pa-post-card .pa-blog-cats a { padding: 6px 14px; font-size: 14px; }
 .pa-blog-post .pa-blog-related { margin-top: 90px; }
+
+/* the article header uses the full width: title on the left, a facts card on the right, picture across the whole page */
+.pa-post-head { max-width: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
+.pa-post-head > h1, .pa-post-head > .pa-post-lead, .pa-post-head > .pa-post-meta, .pa-post-head > .pa-blog-crumbs { grid-column: 1; }
+.pa-post-head > .pa-post-facts { display: none; }
+.pa-post-head > .pa-post-cover { grid-column: 1 / -1; }
+@media (min-width: 1100px) {
+  .pa-post-head { grid-template-columns: minmax(0, 1fr) 360px; column-gap: 64px; }
+  .pa-post-head > .pa-post-facts { display: grid; grid-column: 2; grid-row: 1 / span 4; align-self: end; margin-bottom: 4px; }
+  .pa-post-head h1 { font-size: clamp(36px, 4.6vw, 62px); }
+}
+.pa-post-facts { gap: 16px; padding: 26px 28px; border: 1.5px solid var(--pa-line); border-radius: 26px; background: var(--pa-surface); }
+.pa-post-facts dl { display: grid; gap: 4px; margin: 0; }
+.pa-post-facts dt { margin-top: 12px; font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--pa-muted); }
+.pa-post-facts dt:first-child { margin-top: 0; }
+.pa-post-facts dd { margin: 0; font-size: 17px; font-weight: 600; }
+.pa-post-facts dd.is-cats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.pa-post-facts dd.is-cats a { padding: 5px 13px; border-radius: 999px; border: 1.5px solid var(--pa-line); color: var(--pa-teal-text); font-size: 14px; text-decoration: none; transition: border-color .2s; }
+.pa-post-facts dd.is-cats a:hover { border-color: var(--pa-teal); }
+.pa-facts-cta { justify-self: start; font-weight: 600; color: var(--pa-teal-text); text-decoration: none; border-bottom: 2px solid var(--pa-orange); }
+.pa-post-cover { margin-top: 40px; }
+.pa-post-cover img { aspect-ratio: 2.4 / 1; max-height: 640px; }
