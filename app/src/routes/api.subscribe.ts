@@ -8,13 +8,13 @@ export const Route = createFileRoute("/api/subscribe")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        let b: { name?: unknown; email?: unknown; lang?: unknown; company?: unknown };
+        let b: { name?: unknown; email?: unknown; lang?: unknown; t?: unknown };
         try {
           b = (await request.json()) as typeof b;
         } catch {
           return json({ code: "bad_request" }, 400);
         }
-        if (b.company) return json({ ok: true }); // honeypot: bots fill the hidden field
+        if (typeof b.t === "number" && b.t < 700) return json({ ok: true }); // far too fast for a person: ignore quietly
         const email = typeof b.email === "string" ? b.email.trim().toLowerCase() : "";
         const name = typeof b.name === "string" ? b.name.trim().slice(0, 120) : "";
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 200) return json({ code: "bad_email" }, 400);

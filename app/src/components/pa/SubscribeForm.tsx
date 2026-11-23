@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { usePrefs } from "./prefs";
 
 type Status = "idle" | "sending" | "done" | "error" | "unconfigured";
@@ -8,18 +8,18 @@ export function SubscribeForm() {
   const { t, lang } = usePrefs();
   const [status, setStatus] = useState<Status>("idle");
   const [sent, setSent] = useState("");
+  const born = useRef(Date.now()); // bots submit instantly; people take a few seconds
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
     const data = new FormData(form);
-    if (data.get("company")) return; // honeypot: bots fill this hidden field
     setStatus("sending");
     try {
       const res = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name: data.get("name"), email: data.get("email"), lang, company: data.get("company") }),
+        body: JSON.stringify({ name: data.get("name"), email: data.get("email"), lang, t: Date.now() - born.current }),
       });
       if (res.status === 503) return setStatus("unconfigured");
       if (!res.ok) throw new Error(String(res.status));
@@ -60,7 +60,6 @@ export function SubscribeForm() {
           <input type="email" name="email" placeholder={s.email} autoComplete="email" required />
         </label>
       </div>
-      <input className="pa-hp" type="text" name="company" tabIndex={-1} autoComplete="off" aria-hidden="true" />
       <button type="submit" disabled={status === "sending"}>
         {status === "sending" ? s.sending : s.button}
       </button>
