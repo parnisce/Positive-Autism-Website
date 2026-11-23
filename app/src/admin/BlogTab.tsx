@@ -63,7 +63,8 @@ export function BlogTab({ schema }: { schema: boolean }) {
       setMsg(`Imported ${r.imported} articles.`);
       await Promise.all([load(), cl.reload()]);
     } catch (e) {
-      setMsg(e instanceof Error && e.message === "schema" ? "Run the one-time database update first (shown above)." : "Could not import. Try again.");
+      const m = e instanceof Error ? e.message : "";
+      setMsg(m.includes("schema") ? "Run the one-time database update first (shown above)." : `Could not import: ${m || "unknown error"}`);
     }
     setBusy(false);
   }

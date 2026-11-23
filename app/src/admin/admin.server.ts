@@ -225,15 +225,23 @@ async function run(action: string, body: Record<string, unknown>): Promise<Respo
     }
     case "posts.import": {
       // copy the articles that shipped with the site into the database so they can be edited
+      let step = "reading categories";
+      try {
       let cats = await store.getCategories();
       const have = new Set(cats.map((c) => c.slug));
       cats = [...cats, ...SEED.categories.filter((c) => !have.has(c.slug))];
+      step = "saving categories";
       await store.setCategories(cats);
+      step = "saving posts";
       await store.bulkInsertPosts(
         SEED.posts.map((p) => ({ slug: p.slug, title: p.title, excerpt: p.excerpt, body: p.body, cover: p.cover, published: true, cats: p.cats, created_at: p.date })),
       );
+      step = "finishing";
       await store.setSeedImported(true);
       return json({ ok: true, imported: SEED.posts.length });
+      } catch (e) {
+        throw new Error(`${step}: ${e instanceof Error ? e.message : "error"}`);
+      }
     }
 
     case "products.list":

@@ -148,16 +148,31 @@ export async function savePost(id: number, f: PostInput) {
 export async function deletePost(id: number) {
   await rest(`posts?id=${eq(id)}`, { method: "DELETE", admin: true });
 }
-/** Inserts many posts at once, skipping slugs that already exist. */
+/** Inserts many posts, skipping slugs that already exist. A bad row never stops the others; failures are reported at the end. */
 export async function bulkInsertPosts(rows: (PostInput & { created_at: string })[]) {
-  for (let i = 0; i < rows.length; i += 25) {
-    await rest("posts?on_conflict=slug", {
+  const failed: string[] = [];
+  const send = (list: typeof rows) =>
+    rest("posts?on_conflict=slug", {
       method: "POST",
       admin: true,
-      prefer: "resolution=ignore-duplicates",
-      body: rows.slice(i, i + 25).map((r) => ({ ...r, updated_at: r.created_at })),
+      prefer: "resolution=ignore-duplicates,return=minimal",
+      body: list.map((r) => ({ ...r, updated_at: r.created_at })),
     });
+  for (let i = 0; i < rows.length; i += 10) {
+    const chunk = rows.slice(i, i + 10);
+    try {
+      await send(chunk);
+    } catch {
+      for (const r of chunk) {
+        try {
+          await send([r]);
+        } catch (e) {
+          failed.push(`${r.slug}: ${e instanceof Error ? e.message.slice(0, 160) : "error"}`);
+        }
+      }
+    }
   }
+  if (failed.length) throw new Error(`${failed.length} of ${rows.length} posts could not be saved. First: ${failed[0]}`);
 }
 /** Posts (any status) that carry a category, so it can be removed from them when the category is deleted. */
 export async function postsWithCategory(slug: string): Promise<{ id: number; cats: string[] }[]> {
