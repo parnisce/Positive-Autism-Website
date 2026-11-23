@@ -49,7 +49,7 @@ export function mergeProducts(edits: ProductEdit[]): Row[] {
   return [...added, ...rows];
 }
 
-type Filter = "all" | "edited" | "hidden" | "new";
+type Filter = "all" | "edited" | "hidden" | "new" | "nofile";
 const PAGE = 30;
 
 export function ProductsTab() {
@@ -79,6 +79,7 @@ export function ProductsTab() {
     if (filter === "edited" && !(r.edited && !r.custom)) return false;
     if (filter === "hidden" && !r.hidden) return false;
     if (filter === "new" && !r.custom) return false;
+    if (filter === "nofile" && (r.hidden || r.price <= 0 || r.file)) return false;
     if (cat && !r.cats.includes(cat)) return false;
     return !q || `${r.title} ${r.subtitle}`.toLowerCase().includes(q.toLowerCase());
   });
@@ -127,9 +128,9 @@ export function ProductsTab() {
           <option value="sold">Sort: best selling</option>
         </select>
         <div className="ad-seg">
-          {(["all", "edited", "hidden", "new"] as const).map((f) => (
+          {(["all", "edited", "hidden", "new", "nofile"] as const).map((f) => (
             <button key={f} className={filter === f ? "on" : ""} onClick={() => (setFilter(f), setPage(0))}>
-              {f === "all" ? "All" : f === "edited" ? "Changed" : f === "hidden" ? "Hidden" : "Added by me"}
+              {f === "all" ? "All" : f === "edited" ? "Changed" : f === "hidden" ? "Hidden" : f === "new" ? "Added by me" : "No download link"}
             </button>
           ))}
         </div>
