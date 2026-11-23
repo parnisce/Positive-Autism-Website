@@ -1,5 +1,5 @@
 /** Browser side of /api/admin. */
-export type Setup = { password: boolean; db: boolean; schema: boolean; adminKey: boolean; stripe: "test" | "live" | null };
+export type Setup = { password: boolean; db: boolean; schema: boolean; adminKey: boolean; keyProblem?: boolean; stripe: "test" | "live" | null };
 export type Status = { auth: boolean; setup: Setup };
 
 export class ApiError extends Error {

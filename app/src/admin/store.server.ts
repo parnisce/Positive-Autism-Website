@@ -51,6 +51,7 @@ async function rest<T = unknown>(path: string, o: Opts = {}): Promise<T> {
         return undefined;
       }
     })();
+    if (code === "42501" && o.admin) throw new StoreError(res.status, "wrong_key: Supabase refused the write, so the key saved as SUPABASE_SECRET_KEY is not the secret key. In Supabase open Project Settings > API Keys, copy the secret key (it starts with sb_secret_), put it in the Cloudflare secret SUPABASE_SECRET_KEY and redeploy.");
     throw new StoreError(res.status, code === "PGRST205" || code === "42P01" ? "no_tables" : code === "PGRST204" || code === "42703" ? "schema" : text.slice(0, 300) || `http_${res.status}`);
   }
   return (text ? JSON.parse(text) : null) as T;
@@ -78,7 +79,19 @@ export async function health() {
       /* update script not run yet */
     }
   }
-  return { tables, schema, secretKey: !!c.secret };
+  // a key that is really the public one can read but never write, so say so instead of failing later
+  const role = (() => {
+    const k = c.secret || "";
+    if (k.startsWith("sb_secret_")) return "secret";
+    if (k.startsWith("sb_publishable_")) return "publishable";
+    try {
+      const p = JSON.parse(atob(k.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))) as { role?: string };
+      return p.role === "service_role" ? "secret" : p.role === "anon" ? "publishable" : "unknown";
+    } catch {
+      return c.secret ? "unknown" : "none";
+    }
+  })();
+  return { tables, schema, secretKey: !!c.secret && role !== "publishable", keyProblem: role === "publishable" };
 }
 
 // ---- settings (page text) ----

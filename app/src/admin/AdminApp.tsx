@@ -341,7 +341,10 @@ function Settings({ setup }: { setup: Setup }) {
           <li className="ok">Admin password is set</li>
           <li className={setup.db ? "ok" : "bad"}>Database tables {setup.db ? "found" : "not created yet"}</li>
           <li className={setup.schema ? "ok" : "bad"}>Blog categories {setup.schema ? "ready" : "need the one-time database update (open Categories)"}</li>
-          <li className={setup.adminKey ? "ok" : "bad"}>Supabase secret key {setup.adminKey ? "found" : "not added yet"}</li>
+          <li className={setup.adminKey ? "ok" : "bad"}>
+            Supabase secret key{" "}
+            {setup.adminKey ? "found" : setup.keyProblem ? "is wrong: the key saved in Cloudflare is the public (publishable) key, which cannot save anything. Replace it with the secret key (starts with sb_secret_) from Supabase → Project Settings → API Keys, then redeploy." : "not added yet"}
+          </li>
           <li className={setup.stripe ? "ok" : "bad"}>
             Stripe payments: {setup.stripe ? `${setup.stripe === "live" ? "live" : "test (sandbox)"} key found` : "no key found"}
           </li>

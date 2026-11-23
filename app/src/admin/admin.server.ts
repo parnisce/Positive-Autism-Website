@@ -60,7 +60,7 @@ export async function handleAdmin(request: Request): Promise<Response> {
   if (request.method === "GET") {
     return json({
       auth: !!password && (await signedIn(request, password)),
-      setup: { password: !!password, db: health.tables, schema: health.schema, adminKey: health.secretKey, stripe: stripeKey ? (stripeKey.startsWith("sk_live_") ? "live" : "test") : null },
+      setup: { password: !!password, db: health.tables, schema: health.schema, adminKey: health.secretKey, keyProblem: health.keyProblem, stripe: stripeKey ? (stripeKey.startsWith("sk_live_") ? "live" : "test") : null },
     });
   }
 
