@@ -59,6 +59,7 @@ const en = {
     start: "Start learning",
     browse: "Browse ebooks",
     step: "Slide",
+    scroll: "Scroll",
     slides: [
       { eyebrow: "Learn at your own pace", title: "Practical guides for every day.", lead: "Step-by-step resources, visual supports and ebooks that turn big goals into small, calm steps." },
       { eyebrow: "Support for families", title: "Walk the journey together.", lead: "Trusted advice for parents and caregivers, from the first questions to everyday routines." },
@@ -288,6 +289,7 @@ const es: Copy = {
     start: "Empezar a aprender",
     browse: "Ver ebooks",
     step: "Diapositiva",
+    scroll: "Desplaza",
     slides: [
       { eyebrow: "Aprende a tu propio ritmo", title: "Guías prácticas para cada día.", lead: "Recursos paso a paso, apoyos visuales y ebooks que convierten grandes metas en pasos pequeños y tranquilos." },
       { eyebrow: "Apoyo para las familias", title: "Recorramos el camino juntos.", lead: "Consejos de confianza para madres, padres y cuidadores, desde las primeras preguntas hasta las rutinas diarias." },

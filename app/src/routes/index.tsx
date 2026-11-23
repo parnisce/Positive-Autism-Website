@@ -27,7 +27,7 @@ export const Route = createFileRoute("/")({
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" as const },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Lexend:wght@400;500;600&display=swap",
       },
     ],
   }),
@@ -50,7 +50,7 @@ function useMotion(rootRef: React.RefObject<HTMLDivElement | null>) {
 
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         // ---- smooth scrolling, driven by GSAP's ticker so ScrollTrigger stays in sync ----
-        const lenis = new Lenis({ lerp: 0.085, smoothWheel: true, wheelMultiplier: 0.9, anchors: true });
+        const lenis = new Lenis({ lerp: 0.072, smoothWheel: true, wheelMultiplier: 0.95, touchMultiplier: 1.3, anchors: true });
         lenis.on("scroll", ScrollTrigger.update);
         const tick = (time: number) => lenis.raf(time * 1000);
         gsap.ticker.add(tick);
@@ -290,7 +290,7 @@ function Page() {
 
       <main id="main">
         <section className="pa-hero pa-layer" id="top" data-slider>
-          <HeroVideos stepLabel={t.hero.step} />
+          <HeroVideos stepLabel={t.hero.step} scrollLabel={t.hero.scroll} />
           <div className="pa-wrap pa-hero-grid">
             <div className="pa-hero-copy">
               <div className="pa-slides">

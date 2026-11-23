@@ -34,7 +34,7 @@
   color-scheme: dark;
 }
 :root { scroll-padding-top: 84px; }
-.pa-root { background: var(--pa-paper); color: var(--pa-text); font-family: "Outfit", system-ui, sans-serif; line-height: 1.65; min-height: 100dvh; }
+.pa-root { --pa-display: "Bricolage Grotesque", "Lexend", system-ui, sans-serif; background: var(--pa-paper); color: var(--pa-text); font-family: "Lexend", system-ui, sans-serif; line-height: 1.65; min-height: 100dvh; }
 .pa-root * { box-sizing: border-box; }
 .pa-root a { color: inherit; }
 .pa-wrap { width: min(1440px, 100%); padding-inline: clamp(20px, 3.4vw, 48px); margin-inline: auto; }
@@ -98,7 +98,6 @@
 .pa-hero-actions { display: flex; flex-wrap: wrap; gap: 14px; }
 
 /* hero video slider: four hyperlapse clips scrubbed by scroll */
-.pa-hero-media { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: var(--pa-sky); }
 .pa-hero-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform-origin: 60% 50%; will-change: transform, opacity; }
 .pa-hero:not(.is-sliding) .pa-hero-media video:not(:first-child) { display: none; }
 /* a soft wash only behind the text side, so the footage stays clear */
@@ -116,13 +115,6 @@
 .pa-slides .pa-lead { margin-bottom: 0; }
 .pa-hero:not(.is-sliding) .pa-slide:not(:first-child) { display: none; }
 .pa-hero h2.pa-slide-h { font-size: clamp(40px, 6.4vw, 76px); line-height: 1.02; letter-spacing: -0.03em; font-weight: 700; margin: 0 0 20px; max-width: 11ch; }
-.pa-hero-steps { position: absolute; z-index: 2; left: 50%; bottom: 28px; translate: -50% 0; display: none; gap: 14px; margin: 0; padding: 0; list-style: none; }
-.pa-hero.is-sliding .pa-hero-steps { display: flex; }
-.pa-hero-step { display: grid; gap: 6px; width: 64px; padding: 0; border: 0; background: none; color: var(--pa-text); font: inherit; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-align: left; cursor: pointer; opacity: .6; transition: opacity .3s; }
-.pa-hero-step i { display: block; height: 4px; border-radius: 4px; background: color-mix(in srgb, var(--pa-text) 22%, transparent); position: relative; overflow: hidden; }
-.pa-hero-step i::after { content: ""; position: absolute; inset: 0; background: var(--pa-orange); transform: scaleX(0); transform-origin: left; transition: transform .5s; }
-.pa-hero-step.on { opacity: 1; }
-.pa-hero-step.on i::after { transform: scaleX(1); }
 .pa-btn-explore { display: inline-flex; align-items: center; gap: 10px; background: var(--pa-teal); color: var(--pa-white) !important; text-decoration: none; font-weight: 600; font-size: 18px; padding: 16px 28px; border-radius: 16px 16px 16px 4px; transition: transform .25s, box-shadow .25s; box-shadow: 0 10px 0 -4px #0e5a61; }
 .pa-btn-explore:hover { transform: translateY(-3px); box-shadow: 0 14px 0 -4px #0e5a61; }
 .pa-btn-explore:active { transform: translateY(1px); }
@@ -465,4 +457,33 @@ html.pa-seen .pa-loader { display: none; }
   .pa-layer::after { display: none; }
   .pa-root * { transition: none !important; animation: none !important; transform: none !important; }
 }
-.pa-hero-steps { padding: 10px 18px; border-radius: 16px; background: color-mix(in srgb, var(--pa-paper) 88%, transparent); box-shadow: 0 14px 30px -20px rgba(8, 30, 36, .5); }
+
+/* typography: Bricolage Grotesque for headings, Lexend (made for easy reading) for everything else */
+.pa-root h1, .pa-root h2, .pa-root h3, .pa-root h4, .pa-h2, .pa-slide-h, .pa-logo-text, .pa-eb-num, .pa-s-hero h1 { font-family: var(--pa-display); letter-spacing: -0.02em; }
+.pa-root { letter-spacing: 0; line-height: 1.7; }
+.pa-root p, .pa-root li { word-spacing: 0.02em; }
+
+/* hero: framed 3D video, everything driven by one smoothed scroll value (see HeroVideos.tsx) */
+.pa-hero { background: var(--pa-paper); }
+.pa-hero-media { position: absolute; inset: 14px; z-index: 0; overflow: hidden; border-radius: 34px; background: #0d2a30; box-shadow: 0 50px 90px -50px rgba(8, 30, 36, .7); }
+@media (max-width: 899px) { .pa-hero-media { inset: 0; border-radius: 0 0 26px 26px; } }
+.pa-hero-media video { transform-origin: 55% 55%; backface-visibility: hidden; }
+.pa-hero-shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(6, 22, 26, .32) 0%, transparent 24%, transparent 58%, rgba(6, 22, 26, .55) 100%); }
+.pa-slides .pa-slide { will-change: transform, opacity; }
+.pa-hero-actions { will-change: transform, opacity; }
+.pa-hero-hud { position: absolute; inset: 14px; z-index: 3; display: none; pointer-events: none; color: #fff; }
+.pa-hero.is-sliding .pa-hero-hud { display: block; }
+@media (max-width: 899px) { .pa-hero-hud { inset: 0; } }
+.pa-hero-count { position: absolute; left: clamp(22px, 4vw, 56px); bottom: 30px; margin: 0; font: 600 14px/1 var(--pa-display); letter-spacing: .14em; color: #ffffffcc; }
+.pa-hero-count b { font-size: 30px; letter-spacing: 0; color: #fff; }
+.pa-hero-steps { position: absolute; left: 50%; bottom: 36px; translate: -50% 0; display: flex; gap: 10px; margin: 0; padding: 0; list-style: none; pointer-events: auto; }
+.pa-hero-step { width: 76px; height: 24px; padding: 10px 0; border: 0; background: none; cursor: pointer; opacity: .75; transition: opacity .3s; }
+.pa-hero-step:hover, .pa-hero-step.on { opacity: 1; }
+.pa-hero-step i { position: relative; display: block; height: 4px; overflow: hidden; border-radius: 4px; background: rgba(255, 255, 255, .32); }
+.pa-hero-step i::after { content: ""; position: absolute; inset: 0; background: #fff; transform: scaleX(var(--fill, 0)); transform-origin: left; }
+.pa-hero-hint { position: absolute; right: clamp(22px, 4vw, 56px); bottom: 30px; display: flex; align-items: center; gap: 12px; margin: 0; font-size: 12px; font-weight: 500; letter-spacing: .22em; text-transform: uppercase; color: #ffffffd9; }
+.pa-hero-hint span { display: block; width: 1px; height: 38px; background: linear-gradient(#fff, transparent); transform-origin: top; animation: pa-hint 1.9s ease-in-out infinite; }
+@keyframes pa-hint { 0% { transform: scaleY(0); } 55% { transform: scaleY(1); } 100% { transform: scaleY(1); opacity: 0; } }
+@media (max-width: 899px) { .pa-hero-hint { display: none; } .pa-hero-steps { bottom: 30px; } .pa-hero-step { width: 56px; } .pa-hero-count { bottom: 22px; } }
+@media (prefers-reduced-motion: reduce) { .pa-hero-hint span { animation: none; } }
+.pa-hero h1, .pa-hero h2.pa-slide-h { text-wrap: balance; }
