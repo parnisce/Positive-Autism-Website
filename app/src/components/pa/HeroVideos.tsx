@@ -34,15 +34,12 @@ export function HeroVideos({ stepLabel, scrollLabel }: { stepLabel: string; scro
 
     mm.add("(prefers-reduced-motion: no-preference)", () => {
       hero.classList.add("is-sliding");
-      videos.forEach((v) => {
-        v.preload = "auto";
-        v.load();
-      });
 
       const N = HERO_SLIDES;
       const st = { target: 0, smooth: 0 };
       let active = -1;
       let last = -1;
+      const frac = new Array<number>(N).fill(0);
 
       const render = (p: number) => {
         for (let s = 0; s < N; s++) {
@@ -53,14 +50,8 @@ export function HeroVideos({ stepLabel, scrollLabel }: { stepLabel: string; scro
           const v = videos[s];
           v.style.opacity = String(vo);
           v.style.visibility = vo > 0.01 ? "visible" : "hidden";
-          if (vo > 0.01) {
-            v.style.transform = `scale(${1 + clamp01(d) * 0.09})`;
-            const dur = v.duration;
-            if (dur && Number.isFinite(dur)) {
-              const t = Math.round(clamp01(d) * (dur - 0.06) * 24) / 24;
-              if (Math.abs(v.currentTime - t) > 0.03) v.currentTime = t;
-            }
-          }
+          frac[s] = clamp01(d);
+          if (vo > 0.01) v.style.transform = `scale(${1 + clamp01(d) * 0.09})`;
           // text slides in from its own side and leaves to the same side
           const dir = s % 2 ? 1 : -1;
           const tin = s === 0 ? 1 : ease(clamp01((d - 0.04) / 0.26));
@@ -92,6 +83,17 @@ export function HeroVideos({ stepLabel, scrollLabel }: { stepLabel: string; scro
         if (hint) hint.style.opacity = String(1 - clamp01(p * 6));
       };
 
+      // moves each visible clip to the frame that matches the scroll (retries until the clip has loaded)
+      const seek = () => {
+        for (let s = 0; s < N; s++) {
+          const v = videos[s];
+          const dur = v.duration;
+          if (v.style.visibility === "hidden" || !dur || !Number.isFinite(dur) || v.seeking) continue;
+          const t = Math.round(frac[s] * (dur - 0.06) * 24) / 24;
+          if (Math.abs(v.currentTime - t) > 0.03) v.currentTime = t;
+        }
+      };
+
       const trigger = ScrollTrigger.create({
         trigger: hero,
         start: "top top",
@@ -115,6 +117,7 @@ export function HeroVideos({ stepLabel, scrollLabel }: { stepLabel: string; scro
           last = st.smooth;
           render(Math.min(0.9999, st.smooth) * N);
         }
+        seek();
       };
       gsap.ticker.add(tick);
       render(0);
@@ -152,7 +155,7 @@ export function HeroVideos({ stepLabel, scrollLabel }: { stepLabel: string; scro
             poster={`/assets/hero/slide-${i + 1}.jpg`}
             muted
             playsInline
-            preload={i === 0 ? "auto" : "metadata"}
+            preload="auto"
             tabIndex={-1}
           />
         ))}
