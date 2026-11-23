@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getBlog } from "../admin/site.functions";
 import { useCallback, useRef, useState } from "react";
 import Lenis from "lenis";
 import { gsap } from "gsap";
@@ -21,6 +22,8 @@ import { ARTICLE_IMAGES, LINKS } from "../i18n";
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 export const Route = createFileRoute("/")({
+  // the newest blog posts, shown in "Latest from Autism Info" and "Positive news and research"
+  loader: () => getBlog().catch(() => ({ posts: [], categories: [] })),
   head: () => ({
     scripts: [{ children: THEME_BOOT }],
     links: [
@@ -264,8 +267,23 @@ function Index() {
   );
 }
 
+/** Newest posts of a category, sub-categories included. */
+function latestIn(d: { posts: { cats: string[]; created_at: string }[]; categories: { slug: string; parent: string }[] }, slug: string, n: number) {
+  const set = new Set([slug]);
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const c of d.categories) if (set.has(c.parent) && !set.has(c.slug)) (set.add(c.slug), (grew = true));
+  }
+  return d.posts.filter((p) => p.cats.some((c) => set.has(c))).slice(0, n);
+}
+
 function Page() {
-  const { t, theme } = usePrefs();
+  const { t, theme, lang } = usePrefs();
+  const blog = Route.useLoaderData();
+  const fmt = (d: string) => new Date(d).toLocaleDateString(lang === "es" ? "es-CA" : "en-CA", { year: "numeric", month: "short", day: "numeric" });
+  const infoPosts = latestIn(blog, "autism-info", 6) as typeof blog.posts;
+  const newsPosts = latestIn(blog, "news", 3) as typeof blog.posts;
   const [filmOpen, setFilmOpen] = useState(false);
   const closeFilm = useCallback(() => setFilmOpen(false), []);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -346,17 +364,31 @@ function Page() {
             <div className="pa-articles">
               <h3>{t.info.articlesTitle}</h3>
               <ul className="pa-article-list">
-                {t.info.articles.map((a, i) => (
-                  <li key={a.title} className="pa-article pa-reveal">
-                    <div className="pa-article-img">
-                      <img src={ARTICLE_IMAGES[i]} alt="" loading="lazy" />
-                    </div>
-                    <div className="pa-article-body">
-                      <time>{a.date}</time>
-                      <h4>{a.title}</h4>
-                    </div>
-                  </li>
-                ))}
+                {infoPosts.length > 0
+                  ? infoPosts.map((p, i) => (
+                      <li key={p.slug} className="pa-article pa-reveal">
+                        <a className="pa-article-link" href={`/blog/${p.slug}`}>
+                          <div className="pa-article-img">
+                            <img src={p.cover || ARTICLE_IMAGES[i % ARTICLE_IMAGES.length]} alt="" loading="lazy" />
+                          </div>
+                          <div className="pa-article-body">
+                            <time>{fmt(p.created_at)}</time>
+                            <h4>{p.title}</h4>
+                          </div>
+                        </a>
+                      </li>
+                    ))
+                  : t.info.articles.map((a, i) => (
+                      <li key={a.title} className="pa-article pa-reveal">
+                        <div className="pa-article-img">
+                          <img src={ARTICLE_IMAGES[i]} alt="" loading="lazy" />
+                        </div>
+                        <div className="pa-article-body">
+                          <time>{a.date}</time>
+                          <h4>{a.title}</h4>
+                        </div>
+                      </li>
+                    ))}
               </ul>
               <a className="pa-more" href="/blog/category/autism-info">
                 {t.blog.seeInfo} →
@@ -509,16 +541,27 @@ function Page() {
             <h2 className="pa-h2">{t.news.h2}</h2>
             <p className="pa-sub">{t.news.sub}</p>
             <div className="pa-news-row">
-              {t.news.items.map((n, i) => (
-                <article key={n.title} className="pa-news-card pa-reveal">
-                  <img src={NEWS_IMAGES[i]} alt={n.alt} loading="lazy" />
-                  <div className="pa-news-body">
-                    <time>{n.date}</time>
-                    <h3>{n.title}</h3>
-                    <p>{n.text}</p>
-                  </div>
-                </article>
-              ))}
+              {newsPosts.length > 0
+                ? newsPosts.map((p, i) => (
+                    <a key={p.slug} className="pa-news-card pa-reveal" href={`/blog/${p.slug}`}>
+                      <img src={p.cover || NEWS_IMAGES[i % NEWS_IMAGES.length]} alt="" loading="lazy" />
+                      <div className="pa-news-body">
+                        <time>{fmt(p.created_at)}</time>
+                        <h3>{p.title}</h3>
+                        <p>{p.excerpt}</p>
+                      </div>
+                    </a>
+                  ))
+                : t.news.items.map((n, i) => (
+                    <article key={n.title} className="pa-news-card pa-reveal">
+                      <img src={NEWS_IMAGES[i]} alt={n.alt} loading="lazy" />
+                      <div className="pa-news-body">
+                        <time>{n.date}</time>
+                        <h3>{n.title}</h3>
+                        <p>{n.text}</p>
+                      </div>
+                    </article>
+                  ))}
             </div>
             <a className="pa-more" href="/blog/category/news">
               {t.blog.seeNews} →

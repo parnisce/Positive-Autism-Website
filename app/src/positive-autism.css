@@ -519,3 +519,8 @@ html.pa-film-open { overflow: hidden; }
 .pa-subscribe-done strong { display: block; font-size: 18px; line-height: 1.4; }
 .pa-subscribe-done small { display: block; margin-top: 2px; opacity: .8; }
 .pa-subscribe-done button { margin-top: 8px; padding: 0; border: 0; background: none; color: var(--pa-gold); font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
+
+.pa-article-link { display: flex; flex-direction: column; flex: 1; color: inherit; text-decoration: none; }
+.pa-article-link:focus-visible, .pa-news-card:focus-visible { outline: 3px solid var(--pa-orange); outline-offset: 3px; }
+.pa-news-card { color: inherit; }
+.pa-news-body p { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
