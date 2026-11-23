@@ -16,7 +16,6 @@ export function SiteHeader({ home = false }: { home?: boolean }) {
   const nav = [
     { href: `${base}#autism-info`, label: t.nav.info },
     { href: `${base}#resources`, label: t.nav.resources },
-    { href: "/shop", label: t.nav.ebooks },
     { href: "/blog", label: t.nav.blog },
     { href: `${base}#news`, label: t.nav.news },
     { href: `${base}#neurodiversity`, label: t.nav.neuro },

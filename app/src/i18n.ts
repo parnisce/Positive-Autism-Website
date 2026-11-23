@@ -159,6 +159,7 @@ const en = {
     sub: "A short film made to raise acceptance of autism. Share it with autistic people, parents, teachers, therapists and friends, and talk about it together.",
     cta: "Watch the film",
     label: "Watch the film Accepted As I Am",
+    close: "Close the film",
     alt: "Still from the film Accepted As I Am",
   },
   news: {
@@ -389,6 +390,7 @@ const es: Copy = {
     sub: "Un cortometraje creado para promover la aceptación del autismo. Compártelo con personas autistas, familias, docentes, terapeutas y amigos, y conversen sobre él.",
     cta: "Ver el cortometraje",
     label: "Ver el cortometraje Accepted As I Am",
+    close: "Cerrar la película",
     alt: "Imagen del cortometraje Accepted As I Am",
   },
   news: {

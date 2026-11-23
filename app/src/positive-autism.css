@@ -496,3 +496,17 @@ html.pa-seen .pa-loader { display: none; }
 /* over the hero video the menu links are light too (until the header turns solid on scroll) */
 .pa-root:has(.pa-hero.is-sliding):not(.pa-scrolled) .pa-nav a { color: #fff; text-shadow: 0 1px 10px rgba(5, 20, 24, .55); }
 .pa-root:has(.pa-hero.is-sliding):not(.pa-scrolled) .pa-nav a:hover { color: #ffd27a; }
+
+/* the film plays in a pop-up (no trip to YouTube) */
+button.pa-video-thumb { width: 100%; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+button.pa-btn-watch { background: transparent; color: var(--pa-text); font-family: inherit; cursor: pointer; }
+.pa-film-modal { position: fixed; inset: 0; z-index: 400; display: grid; place-items: center; padding: clamp(14px, 4vw, 48px); background: rgba(4, 16, 20, .82); backdrop-filter: blur(6px); animation: pa-film-in .35s ease both; }
+.pa-film-box { position: relative; width: min(1100px, 100%); animation: pa-film-pop .45s cubic-bezier(.2, .9, .2, 1) both; }
+.pa-film-frame { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 22px; background: #000; box-shadow: 0 40px 100px -30px rgba(0, 0, 0, .8); }
+.pa-film-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.pa-film-close { position: absolute; top: -52px; right: 0; width: 42px; height: 42px; border: 0; border-radius: 50%; background: #fff; color: #12333a; font-size: 18px; font-weight: 700; cursor: pointer; transition: transform .2s; }
+.pa-film-close:hover { transform: scale(1.08) rotate(90deg); }
+@media (max-width: 640px) { .pa-film-close { top: -50px; } .pa-film-frame { border-radius: 14px; } }
+html.pa-film-open { overflow: hidden; }
+@keyframes pa-film-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pa-film-pop { from { opacity: 0; transform: translateY(24px) scale(.96); } to { opacity: 1; transform: none; } }

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import Lenis from "lenis";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -7,6 +7,7 @@ import { useGSAP } from "@gsap/react";
 
 import "../positive-autism.css";
 import { THEME_BOOT } from "../theme-boot";
+import { FilmModal } from "../components/pa/FilmModal";
 import { HeroVideos } from "../components/pa/HeroVideos";
 import { InfoCards } from "../components/pa/InfoCards";
 import { PrefsProvider, usePrefs } from "../components/pa/prefs";
@@ -265,6 +266,8 @@ function Index() {
 
 function Page() {
   const { t, theme } = usePrefs();
+  const [filmOpen, setFilmOpen] = useState(false);
+  const closeFilm = useCallback(() => setFilmOpen(false), []);
   const rootRef = useRef<HTMLDivElement>(null);
   useMotion(rootRef);
 
@@ -484,16 +487,16 @@ function Page() {
         <section className="pa-section pa-layer" id="film">
           <span className="pa-seam pa-seam-a" aria-hidden="true" />
           <div className="pa-wrap pa-video">
-            <a className="pa-video-thumb pa-reveal" href={LINKS.film} aria-label={t.film.label}>
+            <button type="button" className="pa-video-thumb pa-reveal" onClick={() => setFilmOpen(true)} aria-label={t.film.label}>
               <img src="/assets/img/video.webp" alt={t.film.alt} />
               <span className="pa-play" aria-hidden="true" />
-            </a>
+            </button>
             <div>
               <h2 className="pa-h2">{t.film.h2}</h2>
               <p className="pa-sub">{t.film.sub}</p>
-              <a className="pa-btn-watch" href={LINKS.film}>
+              <button type="button" className="pa-btn-watch" onClick={() => setFilmOpen(true)}>
                 {t.film.cta}
-              </a>
+              </button>
             </div>
           </div>
         </section>
@@ -574,6 +577,7 @@ function Page() {
         </section>
       </main>
 
+      <FilmModal open={filmOpen} onClose={closeFilm} title={t.film.label} closeLabel={t.film.close} />
       <SiteFooter home />
     </div>
   );
