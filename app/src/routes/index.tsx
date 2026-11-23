@@ -358,6 +358,9 @@ function Page() {
                   </li>
                 ))}
               </ul>
+              <a className="pa-more" href="/blog/category/autism-info">
+                {t.blog.seeInfo} →
+              </a>
             </div>
           </div>
         </section>
@@ -517,6 +520,9 @@ function Page() {
                 </article>
               ))}
             </div>
+            <a className="pa-more" href="/blog/category/news">
+              {t.blog.seeNews} →
+            </a>
           </div>
         </section>
 

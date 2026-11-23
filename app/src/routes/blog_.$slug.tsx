@@ -9,9 +9,9 @@ export const Route = createFileRoute("/blog_/$slug")({
   loader: ({ params }) => getPost({ data: { slug: params.slug } }),
   head: ({ loaderData }) => ({
     meta: [
-      { title: loaderData ? `${loaderData.title} | Positive Autism` : "Blog | Positive Autism" },
-      ...(loaderData?.excerpt ? [{ name: "description", content: loaderData.excerpt }] : []),
-      ...(loaderData?.cover ? [{ property: "og:image", content: loaderData.cover }] : []),
+      { title: loaderData?.post ? `${loaderData.post.title} | Positive Autism` : "Blog | Positive Autism" },
+      ...(loaderData?.post?.excerpt ? [{ name: "description", content: loaderData.post.excerpt }] : []),
+      ...(loaderData?.post?.cover ? [{ property: "og:image", content: loaderData.post.cover }] : []),
     ],
     scripts: [{ children: THEME_BOOT }],
     links: [
@@ -20,5 +20,8 @@ export const Route = createFileRoute("/blog_/$slug")({
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Lexend:wght@400;500;600&display=swap" },
     ],
   }),
-  component: () => <BlogPost post={Route.useLoaderData()} />,
+  component: () => {
+    const d = Route.useLoaderData();
+    return <BlogPost post={d.post} related={d.related} categories={d.categories} />;
+  },
 });

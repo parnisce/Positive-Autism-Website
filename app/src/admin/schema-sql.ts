@@ -15,6 +15,7 @@ create table if not exists public.posts (
   body text not null default '',
   cover text not null default '',
   published boolean not null default false,
+  cats text[] not null default '{}',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -44,7 +45,7 @@ alter table public.images enable row level security;
 alter table public.stats enable row level security;
 
 drop policy if exists "public reads content" on public.settings;
-create policy "public reads content" on public.settings for select to anon using (key = 'content');
+create policy "public reads content" on public.settings for select to anon using (key in ('content', 'categories', 'seed_imported'));
 drop policy if exists "public reads published posts" on public.posts;
 create policy "public reads published posts" on public.posts for select to anon using (published);
 drop policy if exists "public reads products" on public.products;
@@ -59,4 +60,12 @@ language sql security definer set search_path = public as $$
   on conflict (day, kind, key) do update set n = public.stats.n + 1
 $$;
 grant execute on function public.bump_stats(jsonb) to anon, authenticated;
+`;
+
+/** Already installed? Run just this once to add blog categories (safe to run again). */
+export const UPDATE_SQL = `alter table public.posts add column if not exists cats text[] not null default '{}';
+
+drop policy if exists "public reads content" on public.settings;
+create policy "public reads content" on public.settings for select to anon
+  using (key in ('content', 'categories', 'seed_imported'));
 `;

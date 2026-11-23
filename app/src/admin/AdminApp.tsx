@@ -3,6 +3,7 @@ import { productHref, ORIGINAL, type ProductEdit } from "../shop/catalog";
 import { AnalyticsTab } from "./AnalyticsTab";
 import { api, getStatus, type Setup, type Status } from "./api";
 import { BlogTab } from "./BlogTab";
+import { CategoriesTab } from "./CategoriesTab";
 import { ContentTab } from "./ContentTab";
 import { OrdersTab } from "./OrdersTab";
 import { isSale } from "./orders-types";
@@ -12,7 +13,7 @@ import { SCHEMA_SQL } from "./schema-sql";
 import { Card, OrdersNotice, RankList, cash, num, ranked, useOrders, useStats } from "./ui";
 import "./admin.css";
 
-type Tab = "dashboard" | "orders" | "ebooks" | "reports" | "analytics" | "blog" | "pages" | "settings";
+type Tab = "dashboard" | "orders" | "ebooks" | "reports" | "analytics" | "blog" | "categories" | "pages" | "settings";
 const GROUPS: { title: string; tabs: { id: Tab; label: string; icon: string }[] }[] = [
   { title: "", tabs: [{ id: "dashboard", label: "Dashboard", icon: "◧" }] },
   {
@@ -28,6 +29,7 @@ const GROUPS: { title: string; tabs: { id: Tab; label: string; icon: string }[] 
     tabs: [
       { id: "analytics", label: "Analytics", icon: "📊" },
       { id: "blog", label: "Blog", icon: "✍" },
+      { id: "categories", label: "Categories", icon: "🗂" },
       { id: "pages", label: "Pages and text", icon: "📝" },
     ],
   },
@@ -40,7 +42,7 @@ export function AdminApp() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
-    getStatus().then(setSt).catch(() => setSt({ auth: false, setup: { password: false, db: false, adminKey: false, stripe: null } }));
+    getStatus().then(setSt).catch(() => setSt({ auth: false, setup: { password: false, db: false, schema: false, adminKey: false, stripe: null } }));
   }, []);
   if (!mounted || !st) return <div className="ad ad-center"><p>Loading…</p></div>;
   if (!st.setup.password) return <Setup setup={st.setup} />;
@@ -153,7 +155,8 @@ function Shell({ setup, onOut }: { setup: Setup; onOut: () => void }) {
         {ready && tab === "ebooks" && <ProductsTab />}
         {tab === "reports" && <ReportsTab />}
         {ready && tab === "analytics" && <AnalyticsTab />}
-        {ready && tab === "blog" && <BlogTab />}
+        {ready && tab === "blog" && <BlogTab schema={setup.schema} />}
+        {ready && tab === "categories" && <CategoriesTab schema={setup.schema} />}
         {ready && tab === "pages" && <ContentTab />}
         {tab === "settings" && <Settings setup={setup} />}
       </main>
@@ -337,6 +340,7 @@ function Settings({ setup }: { setup: Setup }) {
         <ul className="ad-status">
           <li className="ok">Admin password is set</li>
           <li className={setup.db ? "ok" : "bad"}>Database tables {setup.db ? "found" : "not created yet"}</li>
+          <li className={setup.schema ? "ok" : "bad"}>Blog categories {setup.schema ? "ready" : "need the one-time database update (open Categories)"}</li>
           <li className={setup.adminKey ? "ok" : "bad"}>Supabase secret key {setup.adminKey ? "found" : "not added yet"}</li>
           <li className={setup.stripe ? "ok" : "bad"}>
             Stripe payments: {setup.stripe ? `${setup.stripe === "live" ? "live" : "test (sandbox)"} key found` : "no key found"}

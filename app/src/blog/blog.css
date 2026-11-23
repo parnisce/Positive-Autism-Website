@@ -29,3 +29,25 @@
 .pa-blog-text ol { list-style: decimal; padding-left: 1.4em; }
 .ad-preview ul { list-style: disc; padding-left: 1.4em; }
 .ad-preview ol { list-style: decimal; padding-left: 1.4em; }
+
+.pa-blog-crumbs { margin-bottom: 14px; font-size: 14px; font-weight: 600; color: var(--pa-muted); }
+.pa-blog-crumbs a { color: var(--pa-teal-text); text-decoration: none; }
+.pa-blog-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; margin: 0 0 18px; }
+.pa-blog-cats { display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 520px; }
+.pa-blog-cats.is-sub { margin: -4px 0 22px; padding-left: 4px; }
+.pa-blog-cats a { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 999px; border: 1.5px solid var(--pa-line); background: var(--pa-surface); color: var(--pa-text); text-decoration: none; font-weight: 600; font-size: 15px; transition: transform .2s, border-color .2s, background .2s; }
+.pa-blog-cats a:hover { transform: translateY(-2px); border-color: var(--pa-teal); }
+.pa-blog-cats a.on { background: var(--pa-teal); border-color: var(--pa-teal); color: #fff; }
+.pa-blog-cats a em { font-style: normal; font-size: 12px; opacity: .7; }
+.pa-blog-cats.is-sub a { padding: 6px 14px; font-size: 14px; background: transparent; }
+.pa-blog-cats.is-sub a.on { background: var(--pa-orange); border-color: var(--pa-orange); color: #12333a; }
+.pa-blog-cats.is-post { margin: 0 0 22px; flex: none; }
+.pa-blog-search { flex: 0 1 280px; padding: 11px 16px; border-radius: 999px; border: 1.5px solid var(--pa-line); background: var(--pa-surface); color: var(--pa-text); font: inherit; }
+.pa-blog-search:focus { outline: 3px solid color-mix(in srgb, var(--pa-teal) 30%, transparent); border-color: var(--pa-teal); }
+.pa-blog-count { margin: 0 0 18px; font-size: 14px; color: var(--pa-muted); }
+.pa-blog-more { display: grid; place-items: center; margin-top: 36px; }
+.pa-blog-related { margin-top: 70px; }
+.pa-blog-related h2 { margin: 0 0 22px; font-size: 28px; }
+.pa-blog-post .pa-blog-related { max-width: none; }
+.pa-blog-body time { text-transform: none; letter-spacing: 0; font-size: 13px; }
+.pa-blog-body span { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }

@@ -1,7 +1,8 @@
-import { Fragment, type ReactNode } from "react";
+import { Fragment, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { Link } from "@tanstack/react-router";
 import { PrefsProvider, usePrefs } from "../components/pa/prefs";
 import { SiteFooter, SiteHeader } from "../components/pa/SiteChrome";
-import type { PostCard, PostFull } from "../admin/site.functions";
+import type { BlogCategory, PostCard, PostFull } from "../admin/site.functions";
 import "./blog.css";
 
 const safeUrl = (u: string) => (/^(https?:\/\/|\/|mailto:|#)/i.test(u) ? u : "#");
@@ -78,32 +79,141 @@ export function Markdown({ text }: { text: string }) {
   );
 }
 
-function IndexBody({ posts }: { posts: PostCard[] }) {
-  const { t, lang } = usePrefs();
-  const date = (d: string) => new Date(d).toLocaleDateString(lang === "es" ? "es-CA" : "en-CA", { year: "numeric", month: "long", day: "numeric" });
+/** Category helpers: a category includes everything in its sub-categories. */
+function useTree(categories: BlogCategory[]) {
+  return useMemo(() => {
+    const bySlug = new Map(categories.map((c) => [c.slug, c]));
+    const kids = new Map<string, BlogCategory[]>();
+    for (const c of categories) kids.set(c.parent, [...(kids.get(c.parent) ?? []), c]);
+    const subtree = (slug: string): Set<string> => {
+      const out = new Set([slug]);
+      for (const k of kids.get(slug) ?? []) for (const x of subtree(k.slug)) out.add(x);
+      return out;
+    };
+    const path = (slug: string) => {
+      const out: BlogCategory[] = [];
+      let c = bySlug.get(slug);
+      while (c) {
+        out.unshift(c);
+        c = c.parent ? bySlug.get(c.parent) : undefined;
+      }
+      return out;
+    };
+    return { bySlug, kids, subtree, path };
+  }, [categories]);
+}
+
+const PAGE = 12;
+const tintOf = (i: number) => ({ "--tint": `var(--pa-tint-${(i % 6) + 1})` }) as CSSProperties;
+
+function Card({ p, i, categories }: { p: PostCard; i: number; categories: Map<string, BlogCategory> }) {
+  const { lang } = usePrefs();
+  const first = p.cats.map((c) => categories.get(c)).find(Boolean);
+  return (
+    <Link className="pa-blog-card" to="/blog/$slug" params={{ slug: p.slug }} style={tintOf(i)}>
+      <span className="pa-blog-img">{p.cover ? <img src={p.cover} alt="" loading="lazy" /> : <i aria-hidden="true">✦</i>}</span>
+      <span className="pa-blog-body">
+        <time>
+          {new Date(p.created_at).toLocaleDateString(lang === "es" ? "es-CA" : "en-CA", { year: "numeric", month: "short", day: "numeric" })}
+          {first ? ` · ${first.name}` : ""}
+        </time>
+        <strong>{p.title}</strong>
+        {p.excerpt && <span>{p.excerpt}</span>}
+      </span>
+    </Link>
+  );
+}
+
+function IndexBody({ posts, categories, active }: { posts: PostCard[]; categories: BlogCategory[]; active?: string }) {
+  const { t } = usePrefs();
+  const tree = useTree(categories);
+  const [q, setQ] = useState("");
+  const [shown, setShown] = useState(PAGE);
+  const cat = active ? tree.bySlug.get(active) : undefined;
+  const path = active ? tree.path(active) : [];
+  const set = active ? tree.subtree(active) : null;
+  const list = useMemo(
+    () =>
+      posts.filter(
+        (p) => (!set || p.cats.some((c) => set.has(c))) && (!q || `${p.title} ${p.excerpt}`.toLowerCase().includes(q.toLowerCase())),
+      ),
+    [posts, set, q],
+  );
+  const top = tree.kids.get("") ?? [];
+  // sub-categories shown under the top row: those of the active branch's top-level category
+  const root = path[0];
+  const subs = root ? (tree.kids.get(root.slug) ?? []) : [];
+  const deeper = cat && (tree.kids.get(cat.slug) ?? []).length ? (tree.kids.get(cat.slug) ?? []) : [];
+  const catMap = tree.bySlug;
   return (
     <div className="pa-root pa-scrolled pa-page">
       <SiteHeader />
       <main id="main" className="pa-legal pa-blog">
         <div className="pa-wrap">
-          <h1>{t.blog.h1}</h1>
-          <p className="pa-blog-sub">{t.blog.sub}</p>
-          {posts.length === 0 ? (
-            <p className="pa-blog-empty">{t.blog.empty}</p>
-          ) : (
-            <div className="pa-blog-grid">
-              {posts.map((p, i) => (
-                <a key={p.slug} className="pa-blog-card" href={`/blog/${p.slug}`} style={{ "--tint": `var(--pa-tint-${(i % 6) + 1})` } as React.CSSProperties}>
-                  <span className="pa-blog-img">{p.cover ? <img src={p.cover} alt="" loading="lazy" /> : <i aria-hidden="true">✦</i>}</span>
-                  <span className="pa-blog-body">
-                    <time>{date(p.created_at)}</time>
-                    <strong>{p.title}</strong>
-                    {p.excerpt && <span>{p.excerpt}</span>}
-                    <em>{t.blog.read} →</em>
-                  </span>
-                </a>
+          {cat && (
+            <nav className="pa-blog-crumbs" aria-label="Breadcrumb">
+              <Link to="/blog">{t.nav.blog}</Link>
+              {path.map((c) => (
+                <span key={c.slug}>
+                  {" / "}
+                  {c.slug === cat.slug ? c.name : <Link to="/blog/category/$slug" params={{ slug: c.slug }}>{c.name}</Link>}
+                </span>
+              ))}
+            </nav>
+          )}
+          <h1>{cat ? cat.name : t.blog.h1}</h1>
+          <p className="pa-blog-sub">{cat?.description || t.blog.sub}</p>
+
+          <div className="pa-blog-tools">
+            <div className="pa-blog-cats" role="list">
+              <Link className={!active ? "on" : ""} to="/blog" role="listitem">
+                {t.blog.all} <em>{posts.length}</em>
+              </Link>
+              {top.map((c) => (
+                <Link key={c.slug} className={root?.slug === c.slug ? "on" : ""} to="/blog/category/$slug" params={{ slug: c.slug }} role="listitem">
+                  {c.name} <em>{c.count}</em>
+                </Link>
               ))}
             </div>
+            <input className="pa-blog-search" type="search" placeholder={t.blog.search} value={q} onChange={(e) => (setQ(e.target.value), setShown(PAGE))} aria-label={t.blog.search} />
+          </div>
+          {subs.length > 0 && (
+            <div className="pa-blog-cats is-sub" role="list">
+              {subs.map((c) => (
+                <Link key={c.slug} className={path.some((x) => x.slug === c.slug) ? "on" : ""} to="/blog/category/$slug" params={{ slug: c.slug }} role="listitem">
+                  {c.name} <em>{c.count}</em>
+                </Link>
+              ))}
+            </div>
+          )}
+          {deeper.length > 0 && !subs.some((s) => s.slug === cat?.slug) && (
+            <div className="pa-blog-cats is-sub" role="list">
+              {deeper.map((c) => (
+                <Link key={c.slug} to="/blog/category/$slug" params={{ slug: c.slug }} role="listitem">
+                  {c.name} <em>{c.count}</em>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {list.length === 0 ? (
+            <p className="pa-blog-empty">{posts.length === 0 ? t.blog.empty : t.blog.none}</p>
+          ) : (
+            <>
+              <p className="pa-blog-count">{t.blog.count.replace("{n}", String(list.length))}</p>
+              <div className="pa-blog-grid">
+                {list.slice(0, shown).map((p, i) => (
+                  <Card key={p.slug} p={p} i={i} categories={catMap} />
+                ))}
+              </div>
+              {shown < list.length && (
+                <div className="pa-blog-more">
+                  <button type="button" className="pa-btn-watch" onClick={() => setShown(shown + PAGE)}>
+                    {t.blog.more}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>
@@ -112,33 +222,55 @@ function IndexBody({ posts }: { posts: PostCard[] }) {
   );
 }
 
-export function BlogIndex({ posts }: { posts: PostCard[] }) {
+export function BlogIndex(props: { posts: PostCard[]; categories: BlogCategory[]; active?: string }) {
   return (
     <PrefsProvider>
-      <IndexBody posts={posts} />
+      <IndexBody key={props.active ?? "all"} {...props} />
     </PrefsProvider>
   );
 }
 
-function PostBody({ post }: { post: PostFull | null }) {
+function PostBody({ post, related, categories }: { post: PostFull | null; related: PostCard[]; categories: BlogCategory[] }) {
   const { t, lang } = usePrefs();
+  const tree = useTree(categories);
   return (
     <div className="pa-root pa-scrolled pa-page">
       <SiteHeader />
       <main id="main" className="pa-legal pa-blog">
         <div className="pa-wrap pa-blog-post">
-          <a className="pa-back" href="/blog">
+          <Link className="pa-back" to="/blog">
             ← {t.blog.back}
-          </a>
+          </Link>
           {post ? (
-            <article>
-              <time>{new Date(post.created_at).toLocaleDateString(lang === "es" ? "es-CA" : "en-CA", { year: "numeric", month: "long", day: "numeric" })}</time>
-              <h1>{post.title}</h1>
-              {post.cover && <img className="pa-blog-cover" src={post.cover} alt="" />}
-              <div className="pa-blog-text">
-                <Markdown text={post.body} />
-              </div>
-            </article>
+            <>
+              <article>
+                <time>{new Date(post.created_at).toLocaleDateString(lang === "es" ? "es-CA" : "en-CA", { year: "numeric", month: "long", day: "numeric" })}</time>
+                <h1>{post.title}</h1>
+                {post.cats.length > 0 && (
+                  <div className="pa-blog-cats is-post">
+                    {post.cats.map((c) => tree.bySlug.get(c)).filter((c): c is BlogCategory => !!c).map((c) => (
+                      <Link key={c.slug} to="/blog/category/$slug" params={{ slug: c.slug }}>
+                        {c.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+                {post.cover && <img className="pa-blog-cover" src={post.cover} alt="" />}
+                <div className="pa-blog-text">
+                  <Markdown text={post.body} />
+                </div>
+              </article>
+              {related.length > 0 && (
+                <section className="pa-blog-related">
+                  <h2>{t.blog.related}</h2>
+                  <div className="pa-blog-grid">
+                    {related.map((p, i) => (
+                      <Card key={p.slug} p={p} i={i} categories={tree.bySlug} />
+                    ))}
+                  </div>
+                </section>
+              )}
+            </>
           ) : (
             <p className="pa-blog-empty">{t.blog.notFound}</p>
           )}
@@ -149,10 +281,10 @@ function PostBody({ post }: { post: PostFull | null }) {
   );
 }
 
-export function BlogPost({ post }: { post: PostFull | null }) {
+export function BlogPost(props: { post: PostFull | null; related: PostCard[]; categories: BlogCategory[] }) {
   return (
     <PrefsProvider>
-      <PostBody post={post} />
+      <PostBody {...props} />
     </PrefsProvider>
   );
 }

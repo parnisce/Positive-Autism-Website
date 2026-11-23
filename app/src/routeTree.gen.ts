@@ -26,6 +26,7 @@ import { Route as ApiTrackRouteImport } from './routes/api.track'
 import { Route as BlogSlugRouteImport } from './routes/blog_.$slug'
 import { Route as ShopSuccessRouteImport } from './routes/shop_.success'
 import { Route as ApiImgIdRouteImport } from './routes/api.img.$id'
+import { Route as BlogCategorySlugRouteImport } from './routes/blog_.category.$slug'
 import { Route as ShopEbookSlugRouteImport } from './routes/shop_.ebook.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -113,6 +114,11 @@ const ApiImgIdRoute = ApiImgIdRouteImport.update({
   path: '/api/img/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogCategorySlugRoute = BlogCategorySlugRouteImport.update({
+  id: '/blog_/category/$slug',
+  path: '/blog/category/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShopEbookSlugRoute = ShopEbookSlugRouteImport.update({
   id: '/shop_/ebook/$slug',
   path: '/shop/ebook/$slug',
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/blog/$slug': typeof BlogSlugRoute
   '/shop/success': typeof ShopSuccessRoute
   '/api/img/$id': typeof ApiImgIdRoute
+  '/blog/category/$slug': typeof BlogCategorySlugRoute
   '/shop/ebook/$slug': typeof ShopEbookSlugRoute
 }
 export interface FileRoutesByTo {
@@ -157,6 +164,7 @@ export interface FileRoutesByTo {
   '/blog/$slug': typeof BlogSlugRoute
   '/shop/success': typeof ShopSuccessRoute
   '/api/img/$id': typeof ApiImgIdRoute
+  '/blog/category/$slug': typeof BlogCategorySlugRoute
   '/shop/ebook/$slug': typeof ShopEbookSlugRoute
 }
 export interface FileRoutesById {
@@ -178,6 +186,7 @@ export interface FileRoutesById {
   '/blog_/$slug': typeof BlogSlugRoute
   '/shop_/success': typeof ShopSuccessRoute
   '/api/img/$id': typeof ApiImgIdRoute
+  '/blog_/category/$slug': typeof BlogCategorySlugRoute
   '/shop_/ebook/$slug': typeof ShopEbookSlugRoute
 }
 export interface FileRouteTypes {
@@ -200,6 +209,7 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/shop/success'
     | '/api/img/$id'
+    | '/blog/category/$slug'
     | '/shop/ebook/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -220,6 +230,7 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/shop/success'
     | '/api/img/$id'
+    | '/blog/category/$slug'
     | '/shop/ebook/$slug'
   id:
     | '__root__'
@@ -240,6 +251,7 @@ export interface FileRouteTypes {
     | '/blog_/$slug'
     | '/shop_/success'
     | '/api/img/$id'
+    | '/blog_/category/$slug'
     | '/shop_/ebook/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -261,6 +273,7 @@ export interface RootRouteChildren {
   BlogSlugRoute: typeof BlogSlugRoute
   ShopSuccessRoute: typeof ShopSuccessRoute
   ApiImgIdRoute: typeof ApiImgIdRoute
+  BlogCategorySlugRoute: typeof BlogCategorySlugRoute
   ShopEbookSlugRoute: typeof ShopEbookSlugRoute
 }
 
@@ -385,6 +398,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiImgIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog_/category/$slug': {
+      id: '/blog_/category/$slug'
+      path: '/blog/category/$slug'
+      fullPath: '/blog/category/$slug'
+      preLoaderRoute: typeof BlogCategorySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shop_/ebook/$slug': {
       id: '/shop_/ebook/$slug'
       path: '/shop/ebook/$slug'
@@ -413,6 +433,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlogSlugRoute: BlogSlugRoute,
   ShopSuccessRoute: ShopSuccessRoute,
   ApiImgIdRoute: ApiImgIdRoute,
+  BlogCategorySlugRoute: BlogCategorySlugRoute,
   ShopEbookSlugRoute: ShopEbookSlugRoute,
 }
 export const routeTree = rootRouteImport

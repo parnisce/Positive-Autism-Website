@@ -7,6 +7,7 @@ import { bustSiteData } from "./data.server";
 import { envVar, today } from "./db.server";
 import * as store from "./store.server";
 import { fetchOrders, OrdersError } from "./orders.server";
+import { SEED } from "./blog-data.server";
 import { flattenCopy, type ContentOverrides } from "./site-data";
 
 const COOKIE = "pa_admin";
@@ -47,6 +48,7 @@ async function signedIn(req: Request, password: string) {
 }
 
 const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+const cleanCats = (v: unknown) => (Array.isArray(v) ? [...new Set(v.filter((x): x is string => typeof x === "string" && /^[a-z0-9-]{1,80}$/.test(x)))].slice(0, 20) : []);
 const urlOk = (v: string) => v === "" || v.startsWith("/") || /^https:\/\//i.test(v);
 
 export async function handleAdmin(request: Request): Promise<Response> {
@@ -58,7 +60,7 @@ export async function handleAdmin(request: Request): Promise<Response> {
   if (request.method === "GET") {
     return json({
       auth: !!password && (await signedIn(request, password)),
-      setup: { password: !!password, db: health.tables, adminKey: health.secretKey, stripe: stripeKey ? (stripeKey.startsWith("sk_live_") ? "live" : "test") : null },
+      setup: { password: !!password, db: health.tables, schema: health.schema, adminKey: health.secretKey, stripe: stripeKey ? (stripeKey.startsWith("sk_live_") ? "live" : "test") : null },
     });
   }
 
@@ -157,12 +159,82 @@ async function run(action: string, body: Record<string, unknown>): Promise<Respo
         body: str(body.body, 60000),
         cover,
         published: !!body.published,
+        cats: cleanCats(body.cats),
       });
       return json({ ok: true, id: saved, slug });
     }
     case "posts.delete":
       await store.deletePost(Number(body.id) || 0);
       return json({ ok: true });
+
+    case "categories.list": {
+      const db = await store.getCategories();
+      const fromSeed = db.length === 0;
+      const cats = fromSeed ? SEED.categories : db;
+      const posts = await store.listPostsAdmin().catch(() => []);
+      const direct = new Map<string, number>();
+      for (const p of posts) for (const c of p.cats) direct.set(c, (direct.get(c) ?? 0) + 1);
+      const seedActive = !(await store.getSeedImported().catch(() => false));
+      if (seedActive) {
+        const have = new Set(posts.map((p) => p.slug));
+        for (const p of SEED.posts) if (!have.has(p.slug)) for (const c of p.cats) direct.set(c, (direct.get(c) ?? 0) + 1);
+      }
+      return json({ categories: cats, counts: Object.fromEntries(direct), fromSeed, seed: { active: seedActive, posts: SEED.posts.length } });
+    }
+    case "categories.save": {
+      const name = str(body.name, 120);
+      if (!name) return json({ error: "name_required" }, 400);
+      let cats = await store.getCategories();
+      if (!cats.length) cats = SEED.categories.map((c) => ({ ...c }));
+      const old = str(body.oldSlug, 80);
+      const idx = old ? cats.findIndex((c) => c.slug === old) : -1;
+      if (old && idx < 0) return json({ error: "unknown_category" }, 400);
+      let slug = slugify(str(body.slug, 80) || name);
+      if (cats.some((c, i) => c.slug === slug && i !== idx)) return json({ error: "slug_taken" }, 400);
+      const parent = str(body.parent, 80);
+      if (parent && !cats.some((c) => c.slug === parent)) return json({ error: "bad_parent" }, 400);
+      // a category cannot sit under itself or one of its own sub-categories
+      const below = (root: string): Set<string> => {
+        const out = new Set([root]);
+        for (const c of cats) if (c.parent === root) for (const x of below(c.slug)) out.add(x);
+        return out;
+      };
+      if (old && parent && below(old).has(parent)) return json({ error: "bad_parent" }, 400);
+      const entry = { slug, name, parent, description: str(body.description, 600) };
+      if (idx >= 0) {
+        cats[idx] = entry;
+        if (slug !== old) {
+          for (const c of cats) if (c.parent === old) c.parent = slug;
+          for (const p of await store.postsWithCategory(old)) await store.setPostCats(p.id, p.cats.map((x) => (x === old ? slug : x)));
+        }
+      } else cats.push(entry);
+      await store.setCategories(cats);
+      return json({ ok: true, categories: cats });
+    }
+    case "categories.delete": {
+      const slug = str(body.slug, 80);
+      let cats = await store.getCategories();
+      if (!cats.length) cats = SEED.categories.map((c) => ({ ...c }));
+      const gone = cats.find((c) => c.slug === slug);
+      if (!gone) return json({ error: "unknown_category" }, 400);
+      // sub-categories move up one level; posts just lose this category
+      cats = cats.filter((c) => c.slug !== slug).map((c) => (c.parent === slug ? { ...c, parent: gone.parent } : c));
+      for (const p of await store.postsWithCategory(slug)) await store.setPostCats(p.id, p.cats.filter((x) => x !== slug));
+      await store.setCategories(cats);
+      return json({ ok: true, categories: cats });
+    }
+    case "posts.import": {
+      // copy the articles that shipped with the site into the database so they can be edited
+      let cats = await store.getCategories();
+      const have = new Set(cats.map((c) => c.slug));
+      cats = [...cats, ...SEED.categories.filter((c) => !have.has(c.slug))];
+      await store.setCategories(cats);
+      await store.bulkInsertPosts(
+        SEED.posts.map((p) => ({ slug: p.slug, title: p.title, excerpt: p.excerpt, body: p.body, cover: p.cover, published: true, cats: p.cats, created_at: p.date })),
+      );
+      await store.setSeedImported(true);
+      return json({ ok: true, imported: SEED.posts.length });
+    }
 
     case "products.list":
       return json({ edits: await store.listProductEdits() });

@@ -51,7 +51,7 @@ async function rest<T = unknown>(path: string, o: Opts = {}): Promise<T> {
         return undefined;
       }
     })();
-    throw new StoreError(res.status, code === "PGRST205" || code === "42P01" ? "no_tables" : text.slice(0, 300) || `http_${res.status}`);
+    throw new StoreError(res.status, code === "PGRST205" || code === "42P01" ? "no_tables" : code === "PGRST204" || code === "42703" ? "schema" : text.slice(0, 300) || `http_${res.status}`);
   }
   return (text ? JSON.parse(text) : null) as T;
 }
@@ -68,7 +68,17 @@ export async function health() {
   } catch {
     /* tables missing or project unreachable */
   }
-  return { tables, secretKey: !!c.secret };
+  // the blog categories need one extra column; this says whether the update script has been run
+  let schema = false;
+  if (tables) {
+    try {
+      await rest("posts?select=cats&limit=1");
+      schema = true;
+    } catch {
+      /* update script not run yet */
+    }
+  }
+  return { tables, schema, secretKey: !!c.secret };
 }
 
 // ---- settings (page text) ----
@@ -102,30 +112,31 @@ export async function deleteProduct(id: number) {
 }
 
 // ---- blog ----
-export type PostRow = { id: number; slug: string; title: string; excerpt: string; body: string; cover: string; published: number; created_at: string; updated_at: string };
-const toRow = (p: Omit<PostRow, "published"> & { published: boolean }): PostRow => ({ ...p, published: p.published ? 1 : 0 });
-const POST_COLS = "id,slug,title,excerpt,body,cover,published,created_at,updated_at";
+export type PostRow = { id: number; slug: string; title: string; excerpt: string; body: string; cover: string; published: number; created_at: string; updated_at: string; cats: string[] };
+const toRow = (p: Omit<PostRow, "published"> & { published: boolean }): PostRow => ({ ...p, cats: p.cats ?? [], published: p.published ? 1 : 0 });
+const POST_COLS = "id,slug,title,excerpt,body,cover,published,created_at,updated_at,cats";
+export type PostCardRow = { slug: string; title: string; excerpt: string; cover: string; created_at: string; cats: string[] };
 
 export async function listPostsAdmin(): Promise<PostRow[]> {
-  const r = await rest<(Omit<PostRow, "published"> & { published: boolean })[]>(`posts?select=${POST_COLS}&order=created_at.desc&limit=500`, { admin: true });
+  const r = await rest<(Omit<PostRow, "published"> & { published: boolean })[]>(`posts?select=${POST_COLS}&order=created_at.desc&limit=1000`, { admin: true });
   return r.map(toRow);
 }
-export async function listPublished() {
-  return rest<{ slug: string; title: string; excerpt: string; cover: string; created_at: string }[]>(
-    "posts?select=slug,title,excerpt,cover,created_at&published=eq.true&order=created_at.desc&limit=100",
-  );
+export async function listPublished(): Promise<PostCardRow[]> {
+  const r = await rest<PostCardRow[]>("posts?select=slug,title,excerpt,cover,created_at,cats&published=eq.true&order=created_at.desc&limit=1000");
+  return r.map((p) => ({ ...p, cats: p.cats ?? [] }));
 }
 export async function getPublished(slug: string) {
-  const r = await rest<{ slug: string; title: string; excerpt: string; cover: string; body: string; created_at: string; updated_at: string }[]>(
-    `posts?select=slug,title,excerpt,cover,body,created_at,updated_at&published=eq.true&slug=${eq(slug)}&limit=1`,
+  const r = await rest<(PostCardRow & { body: string; updated_at: string })[]>(
+    `posts?select=slug,title,excerpt,cover,body,created_at,updated_at,cats&published=eq.true&slug=${eq(slug)}&limit=1`,
   );
-  return r[0] ?? null;
+  return r[0] ? { ...r[0], cats: r[0].cats ?? [] } : null;
 }
 export async function slugTaken(slug: string, exceptId: number) {
   const r = await rest<{ id: number }[]>(`posts?select=id&slug=${eq(slug)}&id=neq.${exceptId}&limit=1`, { admin: true });
   return r.length > 0;
 }
-export async function savePost(id: number, f: { slug: string; title: string; excerpt: string; body: string; cover: string; published: boolean }) {
+export type PostInput = { slug: string; title: string; excerpt: string; body: string; cover: string; published: boolean; cats: string[] };
+export async function savePost(id: number, f: PostInput) {
   const now = new Date().toISOString();
   if (id) {
     await rest(`posts?id=${eq(id)}`, { method: "PATCH", admin: true, body: { ...f, updated_at: now } });
@@ -136,6 +147,42 @@ export async function savePost(id: number, f: { slug: string; title: string; exc
 }
 export async function deletePost(id: number) {
   await rest(`posts?id=${eq(id)}`, { method: "DELETE", admin: true });
+}
+/** Inserts many posts at once, skipping slugs that already exist. */
+export async function bulkInsertPosts(rows: (PostInput & { created_at: string })[]) {
+  for (let i = 0; i < rows.length; i += 25) {
+    await rest("posts?on_conflict=slug", {
+      method: "POST",
+      admin: true,
+      prefer: "resolution=ignore-duplicates",
+      body: rows.slice(i, i + 25).map((r) => ({ ...r, updated_at: r.created_at })),
+    });
+  }
+}
+/** Posts (any status) that carry a category, so it can be removed from them when the category is deleted. */
+export async function postsWithCategory(slug: string): Promise<{ id: number; cats: string[] }[]> {
+  return rest(`posts?select=id,cats&cats=cs.%7B${encodeURIComponent(slug)}%7D&limit=1000`, { admin: true });
+}
+export async function setPostCats(id: number, cats: string[]) {
+  await rest(`posts?id=${eq(id)}`, { method: "PATCH", admin: true, body: { cats } });
+}
+
+// ---- blog categories (kept in settings as one list) ----
+export type Category = { slug: string; name: string; parent: string; description: string };
+export async function getCategories(): Promise<Category[]> {
+  const r = await rest<{ value: Category[] }[]>("settings?select=value&key=eq.categories&limit=1");
+  return Array.isArray(r[0]?.value) ? r[0].value : [];
+}
+export async function setCategories(value: Category[]) {
+  await rest("settings?on_conflict=key", { method: "POST", admin: true, prefer: "resolution=merge-duplicates", body: { key: "categories", value } });
+}
+/** True once the starter articles have been copied into the database (they then stop being shown separately). */
+export async function getSeedImported(): Promise<boolean> {
+  const r = await rest<{ value: boolean }[]>("settings?select=value&key=eq.seed_imported&limit=1");
+  return r[0]?.value === true;
+}
+export async function setSeedImported(v: boolean) {
+  await rest("settings?on_conflict=key", { method: "POST", admin: true, prefer: "resolution=merge-duplicates", body: { key: "seed_imported", value: v } });
 }
 
 // ---- images ----

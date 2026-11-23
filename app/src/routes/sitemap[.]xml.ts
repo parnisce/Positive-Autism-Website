@@ -8,8 +8,9 @@ export const Route = createFileRoute("/sitemap.xml")({
       GET: async ({ request }) => {
         const { syncSite } = await import("../admin/data.server");
         await syncSite();
-        const store = await import("../admin/store.server");
-        const posts = await store.listPublished().catch(() => []);
+        const blog = await import("../admin/blog-data.server");
+        const posts = await blog.publicPosts();
+        const cats = await blog.publicCategories(posts);
         const origin = new URL(request.url).origin;
         const today = new Date().toISOString().split("T")[0];
         const xml = [
@@ -27,6 +28,12 @@ export const Route = createFileRoute("/sitemap.xml")({
             `    <lastmod>${today}</lastmod>`,
             "    <changefreq>yearly</changefreq>",
             "    <priority>0.3</priority>",
+            "  </url>",
+          ]),
+          ...cats.flatMap((c) => [
+            "  <url>",
+            `    <loc>${origin}/blog/category/${c.slug}</loc>`,
+            `    <lastmod>${today}</lastmod>`,
             "  </url>",
           ]),
           ...posts.flatMap((p) => [
