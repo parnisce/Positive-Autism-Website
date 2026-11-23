@@ -4,10 +4,11 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export const HERO_SLIDES = 4;
 /** Share of a slide used to cross-fade into the next one. */
-const FADE = 0.18;
+const FADE = 0.28;
 /** How long (in viewport heights) each slide holds while scrolling. */
-const HOLD = 1.1;
-const ease = (x: number) => x * x * (3 - 2 * x);
+const HOLD = 1.3;
+// smootherstep: gentle start and finish, so cross-fades never feel abrupt
+const ease = (x: number) => x * x * x * (x * (x * 6 - 15) + 10);
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 
 /**
@@ -62,8 +63,8 @@ export function HeroVideos({ stepLabel, scrollLabel }: { stepLabel: string; scro
           }
           // text slides in from its own side and leaves to the same side
           const dir = s % 2 ? 1 : -1;
-          const tin = s === 0 ? 1 : ease(clamp01((d - 0.06) / 0.18));
-          const tout = s === N - 1 ? 1 : 1 - ease(clamp01((d - 0.78) / 0.16));
+          const tin = s === 0 ? 1 : ease(clamp01((d - 0.04) / 0.26));
+          const tout = s === N - 1 ? 1 : 1 - ease(clamp01((d - 0.66) / 0.24));
           const to = tin * tout;
           const sl = slides[s];
           sl.style.opacity = String(to);
@@ -71,7 +72,7 @@ export function HeroVideos({ stepLabel, scrollLabel }: { stepLabel: string; scro
           sl.style.transform = `translate3d(${dir * (70 * (1 - tin) + 50 * (1 - tout))}px, 0, 0)`;
         }
 
-        const idx = Math.min(N - 1, Math.max(0, Math.round(p - 0.01)));
+        const idx = Math.min(N - 1, Math.max(0, Math.floor(p + 0.02)));
         if (idx !== active) {
           active = idx;
           hero.classList.toggle("is-right", idx % 2 === 1);
@@ -82,7 +83,7 @@ export function HeroVideos({ stepLabel, scrollLabel }: { stepLabel: string; scro
         if (actions) {
           const b = Math.round(p);
           const dist = b >= 1 && b <= N - 1 ? Math.abs(p - b) : 1;
-          const ao = ease(clamp01(dist / 0.1));
+          const ao = ease(clamp01((dist - 0.03) / 0.14));
           actions.style.opacity = String(ao);
           actions.style.visibility = ao > 0.01 ? "visible" : "hidden";
           actions.style.transform = `translate3d(${(idx % 2 ? 1 : -1) * 36 * (1 - ao)}px, 0, 0)`;
@@ -107,7 +108,7 @@ export function HeroVideos({ stepLabel, scrollLabel }: { stepLabel: string; scro
 
       // one damped value drives everything, so fast wheel flicks still glide
       const tick = (_t: number, dt: number) => {
-        const k = 1 - Math.exp(-dt / 140);
+        const k = 1 - Math.exp(-dt / 170);
         st.smooth += (st.target - st.smooth) * k;
         if (Math.abs(st.target - st.smooth) < 0.00015) st.smooth = st.target;
         if (st.smooth !== last) {

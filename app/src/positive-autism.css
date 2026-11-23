@@ -101,11 +101,18 @@
 .pa-hero-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform-origin: 60% 50%; will-change: transform, opacity; }
 .pa-hero:not(.is-sliding) .pa-hero-media video:not(:first-child) { display: none; }
 /* a soft wash only behind the text side, so the footage stays clear */
-.pa-hero-veil { position: absolute; inset: 0; opacity: 1; transition: opacity .5s; background: linear-gradient(90deg, color-mix(in srgb, var(--pa-paper) 68%, transparent) 0%, color-mix(in srgb, var(--pa-paper) 40%, transparent) 32%, transparent 60%); }
-.pa-hero-veil.r { opacity: 0; background: linear-gradient(270deg, color-mix(in srgb, var(--pa-paper) 68%, transparent) 0%, color-mix(in srgb, var(--pa-paper) 40%, transparent) 32%, transparent 60%); }
+.pa-hero-veil { position: absolute; inset: 0; opacity: 1; transition: opacity .7s ease; background: linear-gradient(90deg, rgba(5, 20, 24, .74) 0%, rgba(5, 20, 24, .5) 34%, rgba(5, 20, 24, .14) 62%, transparent 82%); }
+.pa-hero-veil.r { opacity: 0; background: linear-gradient(270deg, rgba(5, 20, 24, .74) 0%, rgba(5, 20, 24, .5) 34%, rgba(5, 20, 24, .14) 62%, transparent 82%); }
 .pa-hero.is-right .pa-hero-veil:not(.r) { opacity: 0; }
 .pa-hero.is-right .pa-hero-veil.r { opacity: 1; }
-@media (max-width: 899px) { .pa-hero-veil, .pa-hero-veil.r { background: linear-gradient(180deg, color-mix(in srgb, var(--pa-paper) 70%, transparent) 0%, color-mix(in srgb, var(--pa-paper) 40%, transparent) 55%, transparent 90%); } }
+@media (max-width: 899px) { .pa-hero-veil, .pa-hero-veil.r { background: linear-gradient(180deg, rgba(5, 20, 24, .74) 0%, rgba(5, 20, 24, .5) 52%, rgba(5, 20, 24, .1) 92%); } }
+/* the hero text is always light, on the dark scrim, so it reads the same in light and dark mode */
+.pa-hero .pa-eyebrow { color: #ffd27a; }
+.pa-hero h1, .pa-hero h2.pa-slide-h { color: #fff; }
+.pa-hero h1 em { color: #7fe3ea; }
+.pa-hero .pa-lead, .pa-slides .pa-slide .pa-lead { color: rgba(255, 255, 255, .94); }
+.pa-hero .pa-btn-news { color: #fff; }
+.pa-hero .pa-btn-news:hover { color: #ffd27a; border-color: #ffd27a; }
 .pa-slides { display: grid; margin-bottom: 28px; }
 .pa-hero-copy { display: grid; }
 .pa-slides .pa-slide { grid-area: 1 / 1; width: min(560px, 100%); }
