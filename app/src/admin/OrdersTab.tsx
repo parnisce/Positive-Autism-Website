@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "./api";
 import { STATUS_LABEL, isSale, type Order, type OrderStatus } from "./orders-types";
 import { Card, OrdersNotice, StatusPill, cash, downloadCsv, num, useOrders, when } from "./ui";
@@ -24,6 +24,12 @@ export function customersOf(orders: Order[]): Customer[] {
 
 export function OrdersTab() {
   const data = useOrders();
+  // new orders appear on their own
+  useEffect(() => {
+    const t = setInterval(data.reload, 60000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [view, setView] = useState<"orders" | "customers">("orders");
   const [status, setStatus] = useState<OrderStatus | "all" | "hidden">("all");
   const [q, setQ] = useState("");

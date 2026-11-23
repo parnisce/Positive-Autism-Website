@@ -22,6 +22,7 @@ import { Route as UserDataManagementRouteImport } from './routes/user-data-manag
 import { Route as ApiAdminRouteImport } from './routes/api.admin'
 import { Route as ApiCheckoutRouteImport } from './routes/api.checkout'
 import { Route as ApiCheckoutStatusRouteImport } from './routes/api.checkout-status'
+import { Route as ApiSubscribeRouteImport } from './routes/api.subscribe'
 import { Route as ApiTrackRouteImport } from './routes/api.track'
 import { Route as BlogSlugRouteImport } from './routes/blog_.$slug'
 import { Route as ShopSuccessRouteImport } from './routes/shop_.success'
@@ -94,6 +95,11 @@ const ApiCheckoutStatusRoute = ApiCheckoutStatusRouteImport.update({
   path: '/api/checkout-status',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSubscribeRoute = ApiSubscribeRouteImport.update({
+  id: '/api/subscribe',
+  path: '/api/subscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTrackRoute = ApiTrackRouteImport.update({
   id: '/api/track',
   path: '/api/track',
@@ -139,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/api/admin': typeof ApiAdminRoute
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/checkout-status': typeof ApiCheckoutStatusRoute
+  '/api/subscribe': typeof ApiSubscribeRoute
   '/api/track': typeof ApiTrackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/shop/success': typeof ShopSuccessRoute
@@ -160,6 +167,7 @@ export interface FileRoutesByTo {
   '/api/admin': typeof ApiAdminRoute
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/checkout-status': typeof ApiCheckoutStatusRoute
+  '/api/subscribe': typeof ApiSubscribeRoute
   '/api/track': typeof ApiTrackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/shop/success': typeof ShopSuccessRoute
@@ -182,6 +190,7 @@ export interface FileRoutesById {
   '/api/admin': typeof ApiAdminRoute
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/checkout-status': typeof ApiCheckoutStatusRoute
+  '/api/subscribe': typeof ApiSubscribeRoute
   '/api/track': typeof ApiTrackRoute
   '/blog_/$slug': typeof BlogSlugRoute
   '/shop_/success': typeof ShopSuccessRoute
@@ -205,6 +214,7 @@ export interface FileRouteTypes {
     | '/api/admin'
     | '/api/checkout'
     | '/api/checkout-status'
+    | '/api/subscribe'
     | '/api/track'
     | '/blog/$slug'
     | '/shop/success'
@@ -226,6 +236,7 @@ export interface FileRouteTypes {
     | '/api/admin'
     | '/api/checkout'
     | '/api/checkout-status'
+    | '/api/subscribe'
     | '/api/track'
     | '/blog/$slug'
     | '/shop/success'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '/api/admin'
     | '/api/checkout'
     | '/api/checkout-status'
+    | '/api/subscribe'
     | '/api/track'
     | '/blog_/$slug'
     | '/shop_/success'
@@ -269,6 +281,7 @@ export interface RootRouteChildren {
   ApiAdminRoute: typeof ApiAdminRoute
   ApiCheckoutRoute: typeof ApiCheckoutRoute
   ApiCheckoutStatusRoute: typeof ApiCheckoutStatusRoute
+  ApiSubscribeRoute: typeof ApiSubscribeRoute
   ApiTrackRoute: typeof ApiTrackRoute
   BlogSlugRoute: typeof BlogSlugRoute
   ShopSuccessRoute: typeof ShopSuccessRoute
@@ -370,6 +383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCheckoutStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/subscribe': {
+      id: '/api/subscribe'
+      path: '/api/subscribe'
+      fullPath: '/api/subscribe'
+      preLoaderRoute: typeof ApiSubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/track': {
       id: '/api/track'
       path: '/api/track'
@@ -429,6 +449,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminRoute: ApiAdminRoute,
   ApiCheckoutRoute: ApiCheckoutRoute,
   ApiCheckoutStatusRoute: ApiCheckoutStatusRoute,
+  ApiSubscribeRoute: ApiSubscribeRoute,
   ApiTrackRoute: ApiTrackRoute,
   BlogSlugRoute: BlogSlugRoute,
   ShopSuccessRoute: ShopSuccessRoute,

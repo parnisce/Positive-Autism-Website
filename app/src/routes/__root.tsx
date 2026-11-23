@@ -17,7 +17,7 @@ import { reportHiggsfieldError } from "../lib/higgsfield-error-reporting";
 // repo by the marketplace meta API and read at BUILD time — no runtime fetch.
 // Editing it via the app settings UI rewrites this file and redeploys the app.
 import appMetaJson from "../app-meta.json";
-import { applyContent } from "../admin/site-data";
+import { applyContent, applySite } from "../admin/site-data";
 import { getSiteData } from "../admin/site.functions";
 import { Tracker } from "../admin/Tracker";
 import { applyProductEdits } from "../shop/catalog";
@@ -193,6 +193,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const site = Route.useLoaderData();
   applyContent(site.content);
+  applySite(site.site);
   applyProductEdits(site.products);
 
   useEffect(() => {

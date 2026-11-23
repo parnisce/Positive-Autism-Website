@@ -11,10 +11,50 @@ import { isSale } from "./orders-types";
 import { mergeProducts, ProductsTab } from "./ProductsTab";
 import { ReportsTab } from "./ReportsTab";
 import { SCHEMA_SQL } from "./schema-sql";
-import { Card } from "./ui";
+import { SubscribersTab } from "./SubscribersTab";
+import { Card, useOrders } from "./ui";
 import "./admin.css";
 
-type Tab = "dashboard" | "orders" | "ebooks" | "reports" | "analytics" | "blog" | "categories" | "pages" | "settings";
+/** Light or dark admin, remembered in this browser. */
+function useAdminTheme() {
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  useEffect(() => {
+    let t: "light" | "dark" = "light";
+    try {
+      const saved = localStorage.getItem("pa-admin-theme");
+      t = saved === "dark" || saved === "light" ? saved : window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    } catch {
+      /* ignore */
+    }
+    setTheme(t);
+  }, []);
+  useEffect(() => {
+    document.documentElement.setAttribute("data-ad-theme", theme);
+    return () => document.documentElement.removeAttribute("data-ad-theme");
+  }, [theme]);
+  const toggle = () =>
+    setTheme((t) => {
+      const n = t === "dark" ? "light" : "dark";
+      try {
+        localStorage.setItem("pa-admin-theme", n);
+      } catch {
+        /* ignore */
+      }
+      return n;
+    });
+  return { theme, toggle };
+}
+
+function ThemeButton({ theme, toggle, floating = false }: { theme: "light" | "dark"; toggle: () => void; floating?: boolean }) {
+  return (
+    <button type="button" className={`ad-themebtn${floating ? " ad-themefloat" : ""}`} onClick={toggle} aria-label="Switch between light and dark mode">
+      <i aria-hidden="true">{theme === "dark" ? "☀" : "☾"}</i>
+      {theme === "dark" ? "Light mode" : "Dark mode"}
+    </button>
+  );
+}
+
+type Tab = "dashboard" | "orders" | "subscribers" | "ebooks" | "reports" | "analytics" | "blog" | "categories" | "pages" | "settings";
 const GROUPS: { title: string; tabs: { id: Tab; label: string; icon: string }[] }[] = [
   { title: "", tabs: [{ id: "dashboard", label: "Dashboard", icon: "◧" }] },
   {
@@ -23,6 +63,7 @@ const GROUPS: { title: string; tabs: { id: Tab; label: string; icon: string }[] 
       { id: "orders", label: "Orders", icon: "🧾" },
       { id: "ebooks", label: "Ebooks", icon: "📚" },
       { id: "reports", label: "Reports", icon: "📈" },
+      { id: "subscribers", label: "Email list", icon: "✉" },
     ],
   },
   {
@@ -39,6 +80,7 @@ const GROUPS: { title: string; tabs: { id: Tab; label: string; icon: string }[] 
 const ALL = GROUPS.flatMap((g) => g.tabs.map((t) => t.id));
 
 export function AdminApp() {
+  const th = useAdminTheme();
   const [st, setSt] = useState<Status | null>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -47,8 +89,14 @@ export function AdminApp() {
   }, []);
   if (!mounted || !st) return <div className="ad ad-center"><p>Loading…</p></div>;
   if (!st.setup.password) return <Setup setup={st.setup} />;
-  if (!st.auth) return <Login onDone={() => getStatus().then(setSt)} />;
-  return <Shell setup={st.setup} onOut={() => setSt({ ...st, auth: false })} />;
+  if (!st.auth)
+    return (
+      <>
+        <Login onDone={() => getStatus().then(setSt)} />
+        <ThemeButton theme={th.theme} toggle={th.toggle} floating />
+      </>
+    );
+  return <Shell setup={st.setup} onOut={() => setSt({ ...st, auth: false })} theme={th} />;
 }
 
 function Setup({ setup }: { setup: Setup }) {
@@ -109,7 +157,7 @@ function Login({ onDone }: { onDone: () => void }) {
   );
 }
 
-function Shell({ setup, onOut }: { setup: Setup; onOut: () => void }) {
+function Shell({ setup, onOut, theme }: { setup: Setup; onOut: () => void; theme: { theme: "light" | "dark"; toggle: () => void } }) {
   const [tab, setTab] = useState<Tab>(() => {
     const h = typeof location !== "undefined" ? (location.hash.replace(/^#\/?/, "") as Tab) : "dashboard";
     return ALL.includes(h) ? h : "dashboard";
@@ -119,6 +167,14 @@ function Shell({ setup, onOut }: { setup: Setup; onOut: () => void }) {
     document.querySelector(".ad-main")?.scrollTo(0, 0);
   }, [tab]);
   const ready = setup.db && setup.adminKey;
+  // a quiet background check so the menu can show how many orders are waiting for payment
+  const orders = useOrders();
+  useEffect(() => {
+    const t = setInterval(orders.reload, 120000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const badges: Partial<Record<Tab, number>> = { orders: orders.orders.filter((o) => o.status === "pending").length };
   async function out() {
     await api("logout").catch(() => {});
     onOut();
@@ -137,6 +193,7 @@ function Shell({ setup, onOut }: { setup: Setup; onOut: () => void }) {
                 <button key={t.id} className={tab === t.id ? "on" : ""} onClick={() => setTab(t.id)}>
                   <i aria-hidden="true">{t.icon}</i>
                   {t.label}
+                  {badges[t.id] ? <b className="ad-badgen">{badges[t.id]}</b> : null}
                 </button>
               ))}
             </div>
@@ -146,6 +203,7 @@ function Shell({ setup, onOut }: { setup: Setup; onOut: () => void }) {
           <a href="/" target="_blank" rel="noreferrer">
             View website ↗
           </a>
+          <ThemeButton theme={theme.theme} toggle={theme.toggle} />
           <button onClick={out}>Sign out</button>
         </div>
       </aside>
@@ -153,6 +211,7 @@ function Shell({ setup, onOut }: { setup: Setup; onOut: () => void }) {
         {!ready && tab !== "settings" && tab !== "orders" && tab !== "reports" ? <NoDb go={() => setTab("settings")} /> : null}
         {ready && tab === "dashboard" && <DashboardTab go={setTab} setup={setup} />}
         {tab === "orders" && <OrdersTab />}
+        {ready && tab === "subscribers" && <SubscribersTab schema={!!setup.lists} />}
         {ready && tab === "ebooks" && <ProductsTab />}
         {tab === "reports" && <ReportsTab />}
         {ready && tab === "analytics" && <AnalyticsTab />}
@@ -179,6 +238,35 @@ function NoDb({ go }: { go: () => void }) {
   );
 }
 
+function ContactCard() {
+  const [email, setEmail] = useState("");
+  const [msg, setMsg] = useState("");
+  useEffect(() => {
+    api<{ site: { contactEmail: string } }>("site.get").then((r) => setEmail(r.site.contactEmail)).catch(() => {});
+  }, []);
+  async function save() {
+    setMsg("");
+    try {
+      await api("site.save", { contactEmail: email });
+      setMsg("Saved. It shows on the privacy, terms and data pages within a few seconds.");
+    } catch {
+      setMsg("That does not look like an email address.");
+    }
+  }
+  return (
+    <Card title="Contact email">
+      <p className="ad-fine">Shown on the privacy policy, terms and data pages so people can reach you. Leave it empty to point them to your Facebook page instead.</p>
+      <div className="ad-inline">
+        <input className="ad-in" type="email" placeholder="hello@yourdomain.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <button className="ad-btn" onClick={save}>
+          Save
+        </button>
+      </div>
+      {msg && <p className="ad-note ok">{msg}</p>}
+    </Card>
+  );
+}
+
 function Settings({ setup }: { setup: Setup }) {
   return (
     <div className="ad-page">
@@ -192,6 +280,7 @@ function Settings({ setup }: { setup: Setup }) {
         <ul className="ad-status">
           <li className="ok">Admin password is set</li>
           <li className={setup.db ? "ok" : "bad"}>Database tables {setup.db ? "found" : "not created yet"}</li>
+          <li className={setup.lists ? "ok" : "bad"}>Email list {setup.lists ? "ready" : "needs the one-time database update (open Email list)"}</li>
           <li className={setup.schema ? "ok" : "bad"}>Blog categories {setup.schema ? "ready" : "need the one-time database update (open Categories)"}</li>
           <li className={setup.adminKey ? "ok" : "bad"}>
             Supabase secret key{" "}
@@ -224,6 +313,7 @@ function Settings({ setup }: { setup: Setup }) {
           </ol>
         </Card>
       )}
+      {setup.db && setup.adminKey && <ContactCard />}
       <Card title="Good to know">
         <p className="ad-fine">
           Orders are read live from Stripe, so refunds and payment status always match your Stripe dashboard. To change the admin password, edit the ADMIN_PASSWORD secret in Cloudflare and redeploy. Everyone signed in is signed out.

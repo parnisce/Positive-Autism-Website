@@ -1,12 +1,11 @@
 import { useState, type FormEvent } from "react";
-import { SUBSCRIBE_ENDPOINT } from "../../subscribe";
 import { usePrefs } from "./prefs";
 
 type Status = "idle" | "sending" | "done" | "error" | "unconfigured";
 
 /** "Stay connected" sign-up: parents and readers get notified about new ebook releases. */
 export function SubscribeForm() {
-  const { t } = usePrefs();
+  const { t, lang } = usePrefs();
   const [status, setStatus] = useState<Status>("idle");
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -14,17 +13,14 @@ export function SubscribeForm() {
     const form = e.currentTarget;
     const data = new FormData(form);
     if (data.get("company")) return; // honeypot: bots fill this hidden field
-    if (!SUBSCRIBE_ENDPOINT) {
-      setStatus("unconfigured");
-      return;
-    }
     setStatus("sending");
     try {
-      const res = await fetch(SUBSCRIBE_ENDPOINT, {
+      const res = await fetch("/api/subscribe", {
         method: "POST",
-        body: data,
-        headers: { Accept: "application/json" },
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name: data.get("name"), email: data.get("email"), lang, company: data.get("company") }),
       });
+      if (res.status === 503) return setStatus("unconfigured");
       if (!res.ok) throw new Error(String(res.status));
       form.reset();
       setStatus("done");

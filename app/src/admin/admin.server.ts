@@ -60,7 +60,7 @@ export async function handleAdmin(request: Request): Promise<Response> {
   if (request.method === "GET") {
     return json({
       auth: !!password && (await signedIn(request, password)),
-      setup: { password: !!password, db: health.tables, schema: health.schema, adminKey: health.secretKey, keyProblem: health.keyProblem, stripe: stripeKey ? (stripeKey.startsWith("sk_live_") ? "live" : "test") : null },
+      setup: { password: !!password, db: health.tables, schema: health.schema, lists: health.lists, adminKey: health.secretKey, keyProblem: health.keyProblem, stripe: stripeKey ? (stripeKey.startsWith("sk_live_") ? "live" : "test") : null },
     });
   }
 
@@ -242,6 +242,21 @@ async function run(action: string, body: Record<string, unknown>): Promise<Respo
       } catch (e) {
         throw new Error(`${step}: ${e instanceof Error ? e.message : "error"}`);
       }
+    }
+
+    case "subscribers.list":
+      return json({ subscribers: await store.listSubscribers() });
+    case "subscribers.delete":
+      await store.deleteSubscriber(Number(body.id) || 0);
+      return json({ ok: true });
+    case "site.get":
+      return json({ site: await store.getSite().catch(() => ({ contactEmail: "" })) });
+    case "site.save": {
+      const email = str(body.contactEmail, 200);
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "bad_email" }, 400);
+      await store.setSite({ contactEmail: email });
+      bustSiteData();
+      return json({ ok: true });
     }
 
     case "products.list":

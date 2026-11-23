@@ -45,7 +45,7 @@ alter table public.images enable row level security;
 alter table public.stats enable row level security;
 
 drop policy if exists "public reads content" on public.settings;
-create policy "public reads content" on public.settings for select to anon using (key in ('content', 'categories', 'seed_imported'));
+create policy "public reads content" on public.settings for select to anon using (key in ('content', 'categories', 'seed_imported', 'site'));
 drop policy if exists "public reads published posts" on public.posts;
 create policy "public reads published posts" on public.posts for select to anon using (published);
 drop policy if exists "public reads products" on public.products;
@@ -60,12 +60,48 @@ language sql security definer set search_path = public as $$
   on conflict (day, kind, key) do update set n = public.stats.n + 1
 $$;
 grant execute on function public.bump_stats(jsonb) to anon, authenticated;
+
+create table if not exists public.subscribers (
+  id bigint generated always as identity primary key,
+  email text unique not null,
+  name text not null default '',
+  lang text not null default 'en',
+  source text not null default 'footer',
+  created_at timestamptz not null default now()
+);
+alter table public.subscribers enable row level security;
+
+create or replace function public.add_subscriber(p_email text, p_name text, p_lang text, p_source text) returns void
+language sql security definer set search_path = public as $
+  insert into public.subscribers (email, name, lang, source)
+  values (lower(p_email), left(p_name, 120), left(p_lang, 5), left(p_source, 40))
+  on conflict (email) do update set name = case when excluded.name <> '' then excluded.name else public.subscribers.name end
+$;
+grant execute on function public.add_subscriber(text, text, text, text) to anon, authenticated;
 `;
 
-/** Already installed? Run just this once to add blog categories (safe to run again). */
+/** Already installed? Run just this once to add blog categories, the email list and the contact setting (safe to run again). */
 export const UPDATE_SQL = `alter table public.posts add column if not exists cats text[] not null default '{}';
 
 drop policy if exists "public reads content" on public.settings;
 create policy "public reads content" on public.settings for select to anon
-  using (key in ('content', 'categories', 'seed_imported'));
+  using (key in ('content', 'categories', 'seed_imported', 'site'));
+
+create table if not exists public.subscribers (
+  id bigint generated always as identity primary key,
+  email text unique not null,
+  name text not null default '',
+  lang text not null default 'en',
+  source text not null default 'footer',
+  created_at timestamptz not null default now()
+);
+alter table public.subscribers enable row level security;
+
+create or replace function public.add_subscriber(p_email text, p_name text, p_lang text, p_source text) returns void
+language sql security definer set search_path = public as $$
+  insert into public.subscribers (email, name, lang, source)
+  values (lower(p_email), left(p_name, 120), left(p_lang, 5), left(p_source, 40))
+  on conflict (email) do update set name = case when excluded.name <> '' then excluded.name else public.subscribers.name end
+$$;
+grant execute on function public.add_subscriber(text, text, text, text) to anon, authenticated;
 `;

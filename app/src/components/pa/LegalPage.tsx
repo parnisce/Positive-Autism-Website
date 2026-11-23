@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { SITE } from "../../admin/site-data";
 import { CONTACT_EMAIL } from "../../contact";
 import { LINKS, type Lang } from "../../i18n";
 import { LEGAL, type LegalKey } from "../../legal";
@@ -9,10 +10,11 @@ import { SiteFooter, SiteHeader } from "./SiteChrome";
 function withContact(text: string, lang: Lang): ReactNode {
   if (!text.includes("{contact}")) return text;
   const [before, after] = text.split("{contact}");
-  const contact: ReactNode = CONTACT_EMAIL ? (
+  const email = SITE.contactEmail || CONTACT_EMAIL;
+  const contact: ReactNode = email ? (
     <>
       {lang === "es" ? "a " : "at "}
-      <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+      <a href={`mailto:${email}`}>{email}</a>
     </>
   ) : (
     <>

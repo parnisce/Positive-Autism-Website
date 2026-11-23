@@ -20,11 +20,12 @@ export const getBlog = createServerFn({ method: "GET" }).handler(async (): Promi
 
 export const getPost = createServerFn({ method: "GET" })
   .validator(z.object({ slug: z.string().min(1).max(160) }))
-  .handler(async ({ data }): Promise<{ post: PostFull | null; related: PostCard[]; categories: BlogCategory[] }> => {
+  .handler(async ({ data }): Promise<{ post: PostFull | null; related: PostCard[]; categories: BlogCategory[]; prev: PostCard | null; next: PostCard | null }> => {
     const { publicPosts, publicPost, publicCategories } = await import("./blog-data.server");
     const post = await publicPost(data.slug);
-    if (!post) return { post: null, related: [], categories: [] };
+    if (!post) return { post: null, related: [], categories: [], prev: null, next: null };
     const all = await publicPosts();
     const related = all.filter((p) => p.slug !== post.slug && p.cats.some((c) => post.cats.includes(c))).slice(0, 3);
-    return { post, related, categories: await publicCategories(all) };
+    const i = all.findIndex((p) => p.slug === post.slug);
+    return { post, related, categories: await publicCategories(all), prev: i >= 0 ? (all[i + 1] ?? null) : null, next: i > 0 ? all[i - 1] : null };
   });

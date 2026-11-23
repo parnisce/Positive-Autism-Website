@@ -7,8 +7,15 @@ import { COPY, type Lang } from "../i18n";
 import type { ProductEdit } from "../shop/catalog";
 
 export type ContentOverrides = Record<Lang, Record<string, string>>;
-export type SiteData = { content: ContentOverrides; products: ProductEdit[] };
-export const EMPTY_SITE: SiteData = { content: { en: {}, es: {} }, products: [] };
+export type SiteSettings = { contactEmail: string };
+export type SiteData = { content: ContentOverrides; products: ProductEdit[]; site: SiteSettings };
+export const EMPTY_SITE: SiteData = { content: { en: {}, es: {} }, products: [], site: { contactEmail: "" } };
+
+/** Settings from the admin that pages read at render time (shared object, updated by the root route). */
+export const SITE: SiteSettings = { contactEmail: "" };
+export function applySite(s: SiteSettings | undefined) {
+  SITE.contactEmail = s?.contactEmail ?? "";
+}
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
 /** The wording as shipped in the code (never changes while the site runs). */

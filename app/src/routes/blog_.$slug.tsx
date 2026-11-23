@@ -22,6 +22,6 @@ export const Route = createFileRoute("/blog_/$slug")({
   }),
   component: () => {
     const d = Route.useLoaderData();
-    return <BlogPost post={d.post} related={d.related} categories={d.categories} />;
+    return <BlogPost post={d.post} related={d.related} categories={d.categories} prev={d.prev} next={d.next} />;
   },
 });

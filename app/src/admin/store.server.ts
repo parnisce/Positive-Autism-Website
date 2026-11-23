@@ -71,6 +71,7 @@ export async function health() {
   }
   // the blog categories need one extra column; this says whether the update script has been run
   let schema = false;
+  let lists = false;
   if (tables) {
     try {
       await rest("posts?select=cats&limit=1");
@@ -91,7 +92,15 @@ export async function health() {
       return c.secret ? "unknown" : "none";
     }
   })();
-  return { tables, schema, secretKey: !!c.secret && role !== "publishable", keyProblem: role === "publishable" };
+  if (tables) {
+    try {
+      await rest("subscribers?select=id&limit=1");
+      lists = true;
+    } catch {
+      /* email list table not created yet */
+    }
+  }
+  return { tables, schema, lists, secretKey: !!c.secret && role !== "publishable", keyProblem: role === "publishable" };
 }
 
 // ---- settings (page text) ----
@@ -247,4 +256,26 @@ export async function getHiddenOrders(): Promise<string[]> {
 }
 export async function setHiddenOrders(ids: string[]) {
   await rest("settings?on_conflict=key", { method: "POST", admin: true, prefer: "resolution=merge-duplicates", body: { key: "hidden_orders", value: ids.slice(-1000) } });
+}
+
+// ---- email list ("Stay connected" sign-ups) ----
+export type Subscriber = { id: number; email: string; name: string; lang: string; source: string; created_at: string };
+export async function addSubscriber(email: string, name: string, lang: string, source: string) {
+  await rest("rpc/add_subscriber", { method: "POST", body: { p_email: email, p_name: name, p_lang: lang, p_source: source } });
+}
+export async function listSubscribers(): Promise<Subscriber[]> {
+  return rest<Subscriber[]>("subscribers?select=id,email,name,lang,source,created_at&order=created_at.desc&limit=5000", { admin: true });
+}
+export async function deleteSubscriber(id: number) {
+  await rest(`subscribers?id=${eq(id)}`, { method: "DELETE", admin: true });
+}
+
+// ---- site settings (contact email) ----
+export type SiteSettings = { contactEmail: string };
+export async function getSite(): Promise<SiteSettings> {
+  const r = await rest<{ value: SiteSettings }[]>("settings?select=value&key=eq.site&limit=1");
+  return { contactEmail: typeof r[0]?.value?.contactEmail === "string" ? r[0].value.contactEmail : "" };
+}
+export async function setSite(value: SiteSettings) {
+  await rest("settings?on_conflict=key", { method: "POST", admin: true, prefer: "resolution=merge-duplicates", body: { key: "site", value } });
 }

@@ -13,8 +13,8 @@ export async function loadSiteData(): Promise<SiteData> {
   if (cache && Date.now() - cache.at < 8000) return cache.data;
   let data: SiteData = EMPTY_SITE;
   try {
-    const [c, products] = await Promise.all([store.getContent(), store.listProductEdits()]);
-    data = { content: { en: c?.en ?? {}, es: c?.es ?? {} }, products };
+    const [c, products, site] = await Promise.all([store.getContent(), store.listProductEdits(), store.getSite().catch(() => ({ contactEmail: "" }))]);
+    data = { content: { en: c?.en ?? {}, es: c?.es ?? {} }, products, site };
   } catch (e) {
     console.error("site data", e);
   }

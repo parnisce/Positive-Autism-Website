@@ -1,5 +1,5 @@
 /* Admin: light control panel (orders, reports, analytics, content) */
-.ad { --bg: #f3f7f7; --panel: #ffffff; --panel2: #eef5f5; --line: #dbe6e6; --text: #12333a; --muted: #5d7782; --acc: #167a83; --acc2: #0f5f67; --warm: #d9822b; --track: #edf3f3; --fill: #cfe9ea;
+.ad { --input: #fff; --bg: #f3f7f7; --panel: #ffffff; --panel2: #eef5f5; --line: #dbe6e6; --text: #12333a; --muted: #5d7782; --acc: #167a83; --acc2: #0f5f67; --warm: #d9822b; --track: #edf3f3; --fill: #cfe9ea;
   position: fixed; inset: 0; z-index: 100; display: flex; overflow: hidden; background: var(--bg); color: var(--text); font: 15px/1.5 "Lexend", system-ui, sans-serif; color-scheme: light; }
 .ad *, .ad *::before, .ad *::after { box-sizing: border-box; }
 .ad h1 { margin: 0; font-size: clamp(34px, 4vw, 52px); line-height: 1.05; letter-spacing: -0.03em; }
@@ -44,7 +44,7 @@
 .ad-btn.danger { border-color: #c0392b; color: #c0392b !important; }
 .ad-btn.sm { padding: 7px 14px; font-size: 14px; }
 .ad-link { padding: 0; border: 0; background: none; color: var(--acc); font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-.ad-in { width: 100%; padding: 10px 13px; border: 1.5px solid var(--line); border-radius: 11px; background: #fff; color: var(--text); font: inherit; }
+.ad-in { width: 100%; padding: 10px 13px; border: 1.5px solid var(--line); border-radius: 11px; background: var(--input); color: var(--text); font: inherit; }
 .ad-in::placeholder { color: #8aa0a6; }
 .ad-in:focus { outline: 3px solid #167a8330; border-color: var(--acc); }
 textarea.ad-in { resize: vertical; line-height: 1.5; }
@@ -294,3 +294,45 @@ textarea.ad-in { resize: vertical; line-height: 1.5; }
 .ad-toast { position: fixed; right: 24px; bottom: 24px; z-index: 300; display: grid; gap: 2px; max-width: 360px; padding: 16px 20px; border-radius: 16px; background: #12333a; color: #fff; box-shadow: 0 24px 50px -20px rgba(0, 0, 0, .6); animation: ad-toast-in .5s cubic-bezier(.2, .9, .2, 1) both; }
 .ad-toast small { color: #ffffffa0; }
 @keyframes ad-toast-in { from { opacity: 0; transform: translateY(20px) scale(.96); } to { opacity: 1; transform: none; } }
+
+/* same typefaces as the website: Bricolage Grotesque for headings, Lexend for text */
+.ad h1, .ad h2, .ad h3, .ad-kpi strong, .ad-today strong, .ad-brand, .ad-goal p b, .ad-mini strong { font-family: "Bricolage Grotesque", "Lexend", system-ui, sans-serif; letter-spacing: -0.02em; }
+.ad h2 { font-size: 19px; }
+
+/* theme switch */
+.ad-themebtn { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border: 0; border-radius: 12px; background: none; color: var(--muted); font: inherit; font-weight: 500; text-align: left; cursor: pointer; }
+.ad-themebtn:hover { background: var(--panel2); color: var(--text); }
+.ad-themefloat { position: fixed; top: 16px; right: 16px; z-index: 5; width: auto; border: 1px solid var(--line); background: var(--panel); }
+
+/* dark mode */
+html[data-ad-theme="dark"] .ad { --input: #0c171c; --bg: #0a1317; --panel: #111e24; --panel2: #172830; --line: #223640; --text: #e6f1f3; --muted: #92abb2; --acc: #46bcc4; --acc2: #8fe9ef; --warm: #f0a95e; --track: #162830; --fill: #1b4650; color-scheme: dark; }
+html[data-ad-theme="dark"] .ad .ad-btn { color: #042127 !important; }
+html[data-ad-theme="dark"] .ad .ad-btn.ghost { color: var(--text) !important; }
+html[data-ad-theme="dark"] .ad .ad-btn.danger { color: #ff8f85 !important; border-color: #ff8f85; }
+html[data-ad-theme="dark"] .ad .ad-btn.ghost.light { color: #fff !important; }
+html[data-ad-theme="dark"] .ad .ad-seg button.on, html[data-ad-theme="dark"] .ad .ad-tool button.on, html[data-ad-theme="dark"] .ad .ad-side button.on { color: #042127; }
+html[data-ad-theme="dark"] .ad .ad-seg-light button.on { color: var(--acc2); background: #fff; }
+html[data-ad-theme="dark"] .ad .ad-in::placeholder { color: #5f7a82; }
+html[data-ad-theme="dark"] .ad .ad-note { background: #2b2210; color: #ffd28a !important; border-color: #4d3b17; }
+html[data-ad-theme="dark"] .ad .ad-note.ok { background: #0f2f22; color: #7fe6b4 !important; border-color: #1c5a40; }
+html[data-ad-theme="dark"] .ad .ad-err, html[data-ad-theme="dark"] .ad .ad-link.danger { color: #ff8f85 !important; }
+html[data-ad-theme="dark"] .ad .ad-badge, html[data-ad-theme="dark"] .ad .ad-pill.warn, html[data-ad-theme="dark"] .ad .ad-st-pending { background: #3a2b12; color: #f4b872; }
+html[data-ad-theme="dark"] .ad .ad-pill.ok, html[data-ad-theme="dark"] .ad .ad-st-paid { background: #0f3a2a; color: #6fe3b0; }
+html[data-ad-theme="dark"] .ad .ad-st-expired { background: #1c2d34; color: #92abb2; }
+html[data-ad-theme="dark"] .ad .ad-st-refunded { background: #3d1a24; color: #ff9fb3; }
+html[data-ad-theme="dark"] .ad .ad-st-partial { background: #2c2240; color: #cdb3ff; }
+html[data-ad-theme="dark"] .ad .ad-alerts li i { background: #3a2b12; color: #f4b872; }
+html[data-ad-theme="dark"] .ad .ad-alerts li.is-ok i { background: #0f3a2a; color: #6fe3b0; }
+html[data-ad-theme="dark"] .ad .ad-alerts li.is-bad i { background: #3d1a24; color: #ff9fb3; }
+html[data-ad-theme="dark"] .ad .ad-delta.up, html[data-ad-theme="dark"] .ad .ad-status .ok::before { color: #5fe0a0; }
+html[data-ad-theme="dark"] .ad .ad-delta.down { color: #ff8f85; }
+html[data-ad-theme="dark"] .ad .ad-card { box-shadow: none; }
+html[data-ad-theme="dark"] .ad .ad-tip, html[data-ad-theme="dark"] .ad .ad-toast { background: #04090c; border: 1px solid var(--line); }
+html[data-ad-theme="dark"] .ad .ad-thumb, html[data-ad-theme="dark"] .ad .ad-av { background: var(--panel2); }
+html[data-ad-theme="dark"] .ad-logo, html[data-ad-theme="dark"] .ad-brand img { filter: brightness(1.2) contrast(1.05); }
+html[data-ad-theme="dark"] .ad .ad-preview, html[data-ad-theme="dark"] .ad .ad-preview * { color: var(--text); }
+html[data-ad-theme="dark"] .ad .ad-preview a { color: var(--acc2); }
+
+.ad-badgen { margin-left: auto; min-width: 22px; padding: 1px 7px; border-radius: 99px; background: var(--warm); color: #fff; font-size: 12px; font-weight: 700; text-align: center; }
+.ad-inline { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+.ad-inline .ad-in { max-width: 420px; }

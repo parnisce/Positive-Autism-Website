@@ -15,7 +15,6 @@
 .pa-blog-body strong { font-size: 22px; line-height: 1.2; }
 .pa-blog-body span { color: var(--pa-muted); line-height: 1.55; }
 .pa-blog-body em { margin-top: 6px; font-style: normal; font-weight: 700; color: var(--pa-teal-text); }
-.pa-blog-post article { max-width: 760px; margin: 0 auto; }
 .pa-blog-cover { display: block; width: 100%; max-height: 460px; object-fit: cover; margin: 8px 0 34px; border-radius: 28px; }
 .pa-blog-text { font-size: 19px; line-height: 1.75; }
 .pa-blog-text h2 { margin: 2em 0 0.5em; font-size: 30px; line-height: 1.2; }
@@ -51,3 +50,53 @@
 .pa-blog-post .pa-blog-related { max-width: none; }
 .pa-blog-body time { text-transform: none; letter-spacing: 0; font-size: 13px; }
 .pa-blog-body span { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* single article: full 1440px layout with contents list, sidebar, sharing and previous/next */
+.pa-readbar { position: fixed; inset: 0 0 auto 0; z-index: 120; height: 4px; background: transparent; pointer-events: none; }
+.pa-readbar i { display: block; height: 100%; background: linear-gradient(90deg, var(--pa-teal), var(--pa-orange)); transform-origin: left; transform: scaleX(0); }
+.pa-post-head { max-width: 980px; margin: 0 0 40px; }
+.pa-post-head h1 { margin: 6px 0 18px; font-size: clamp(36px, 5.2vw, 68px); line-height: 1.04; letter-spacing: -0.03em; text-wrap: balance; }
+.pa-post-lead { margin: 0 0 22px; max-width: 70ch; font-size: clamp(18px, 1.8vw, 23px); line-height: 1.6; color: var(--pa-muted); }
+.pa-post-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px; font-size: 14px; font-weight: 500; color: var(--pa-muted); }
+.pa-post-meta time, .pa-blog-post .pa-post-meta time { text-transform: none; letter-spacing: 0; font-size: 14px; }
+.pa-post-by { display: inline-flex; align-items: center; gap: 10px; color: var(--pa-text); font-weight: 600; }
+.pa-post-by img { width: 34px; height: 34px; padding: 3px; border-radius: 50%; background: var(--pa-surface); border: 1px solid var(--pa-line); object-fit: contain; }
+.pa-post-cover { margin: 34px 0 0; width: 100%; max-width: none; }
+.pa-post-cover img { display: block; width: 100%; max-height: 620px; aspect-ratio: 21 / 9; object-fit: cover; border-radius: 32px; box-shadow: 0 40px 80px -48px rgba(8, 30, 36, .6); }
+.pa-post-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 36px; margin-top: 52px; }
+@media (min-width: 1100px) { .pa-post-grid { grid-template-columns: 250px minmax(0, 1fr) 320px; gap: 56px; } }
+@media (min-width: 1100px) and (max-width: 1299px) { .pa-post-grid { grid-template-columns: 220px minmax(0, 1fr); } .pa-post-side { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; } }
+.pa-post-toc { align-self: start; position: sticky; top: 110px; font-size: 14px; }
+.pa-post-toc h2, .pa-post-card h2 { margin: 0 0 12px; font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--pa-muted); }
+.pa-post-toc ol { margin: 0; padding: 0; list-style: none; border-left: 2px solid var(--pa-line); }
+.pa-post-toc li { margin: 0; }
+.pa-post-toc li a { display: block; padding: 7px 0 7px 16px; margin-left: -2px; border-left: 2px solid transparent; color: var(--pa-muted); text-decoration: none; line-height: 1.4; transition: color .2s, border-color .2s; }
+.pa-post-toc li.is-sub a { padding-left: 30px; font-size: 13px; }
+.pa-post-toc li.on a, .pa-post-toc li a:hover { color: var(--pa-teal-text); border-color: var(--pa-orange); }
+@media (max-width: 1099px) { .pa-post-toc { display: none; } }
+.pa-post-article { min-width: 0; max-width: 820px; }
+.pa-post-article .pa-blog-text { font-size: 20px; line-height: 1.85; }
+.pa-post-article .pa-blog-text > p:first-child { font-size: 22px; line-height: 1.75; }
+.pa-post-article .pa-blog-text h2 { scroll-margin-top: 110px; margin: 2.2em 0 .6em; font-size: clamp(28px, 3vw, 38px); line-height: 1.15; }
+.pa-post-article .pa-blog-text h3 { scroll-margin-top: 110px; font-size: 25px; }
+.pa-post-article .pa-blog-text li::marker { color: var(--pa-orange); }
+.pa-post-article .pa-blog-text blockquote { padding: 18px 26px; border-radius: 0 20px 20px 0; background: color-mix(in srgb, var(--pa-orange) 12%, transparent); }
+.pa-post-article .pa-blog-cats.is-post { margin: 36px 0 18px; }
+.pa-share { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 18px 0; border-top: 1px solid var(--pa-line); border-bottom: 1px solid var(--pa-line); }
+.pa-share span { margin-right: 6px; font-size: 14px; font-weight: 600; color: var(--pa-muted); }
+.pa-share a, .pa-share button { padding: 8px 16px; border: 1.5px solid var(--pa-line); border-radius: 999px; background: var(--pa-surface); color: var(--pa-text); font: inherit; font-size: 14px; font-weight: 600; text-decoration: none; cursor: pointer; transition: border-color .2s, transform .2s; }
+.pa-share a:hover, .pa-share button:hover { border-color: var(--pa-teal); transform: translateY(-2px); }
+.pa-post-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 30px; }
+.pa-post-nav a { display: grid; gap: 4px; padding: 18px 22px; border: 1.5px solid var(--pa-line); border-radius: 20px; background: var(--pa-surface); color: var(--pa-text); text-decoration: none; transition: border-color .2s, transform .2s; }
+.pa-post-nav a:hover { border-color: var(--pa-teal); transform: translateY(-3px); }
+.pa-post-nav a.is-next { text-align: right; }
+.pa-post-nav small { color: var(--pa-muted); font-weight: 600; }
+.pa-post-nav strong { font-size: 17px; line-height: 1.3; }
+@media (max-width: 640px) { .pa-post-nav { grid-template-columns: 1fr; } }
+.pa-post-side { display: grid; gap: 20px; align-content: start; align-self: start; position: sticky; top: 110px; }
+@media (max-width: 1299px) { .pa-post-side { position: static; } }
+.pa-post-card { padding: 24px; border: 1.5px solid var(--pa-line); border-radius: 24px; background: var(--pa-surface); }
+.pa-post-card p { margin: 0 0 18px; color: var(--pa-muted); font-size: 15px; line-height: 1.6; }
+.pa-post-card .pa-btn-explore { font-size: 16px; padding: 13px 22px; }
+.pa-post-card .pa-blog-cats a { padding: 6px 14px; font-size: 14px; }
+.pa-blog-post .pa-blog-related { margin-top: 90px; }
