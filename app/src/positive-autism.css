@@ -110,13 +110,12 @@
 .pa-hero .pa-eyebrow { color: #ffd27a; }
 .pa-hero h1, .pa-hero h2.pa-slide-h { color: #fff; }
 .pa-hero h1 em { color: #7fe3ea; }
-.pa-hero .pa-lead, .pa-slides .pa-slide .pa-lead { color: rgba(255, 255, 255, .94); }
+.pa-hero .pa-lead, .pa-hero .pa-slides .pa-slide .pa-lead { color: rgba(255, 255, 255, .94); }
 .pa-hero .pa-btn-news { color: #fff; }
 .pa-hero .pa-btn-news:hover { color: #ffd27a; border-color: #ffd27a; }
 .pa-slides { display: grid; margin-bottom: 28px; }
 .pa-hero-copy { display: grid; }
 .pa-slides .pa-slide { grid-area: 1 / 1; width: min(560px, 100%); }
-.pa-slides .pa-slide .pa-lead { color: var(--pa-text); }
 .pa-hero.is-sliding .pa-slide:nth-child(even) { justify-self: end; }
 .pa-hero.is-sliding.is-right .pa-hero-actions { width: min(560px, 100%); justify-self: end; justify-content: flex-start; }
 .pa-slides .pa-lead { margin-bottom: 0; }
@@ -494,3 +493,6 @@ html.pa-seen .pa-loader { display: none; }
 @media (max-width: 899px) { .pa-hero-hint { display: none; } .pa-hero-steps { bottom: 30px; } .pa-hero-step { width: 56px; } .pa-hero-count { bottom: 22px; } }
 @media (prefers-reduced-motion: reduce) { .pa-hero-hint span { animation: none; } }
 .pa-hero h1, .pa-hero h2.pa-slide-h { text-wrap: balance; }
+/* over the hero video the menu links are light too (until the header turns solid on scroll) */
+.pa-root:has(.pa-hero.is-sliding):not(.pa-scrolled) .pa-nav a { color: #fff; text-shadow: 0 1px 10px rgba(5, 20, 24, .55); }
+.pa-root:has(.pa-hero.is-sliding):not(.pa-scrolled) .pa-nav a:hover { color: #ffd27a; }

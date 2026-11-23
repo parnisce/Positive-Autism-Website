@@ -302,8 +302,9 @@ function Page() {
                   </h1>
                   <p className="pa-lead">{t.hero.lead}</p>
                 </div>
-                {t.hero.slides.map((sl) => (
-                  <div className="pa-slide" key={sl.title}>
+                {t.hero.slides.map((sl, i) => (
+                  // keyed by position: switching language must not rebuild these (the scroll code styles them directly)
+                  <div className="pa-slide" key={i}>
                     <p className="pa-eyebrow">{sl.eyebrow}</p>
                     <h2 className="pa-slide-h">{sl.title}</h2>
                     <p className="pa-lead">{sl.lead}</p>
