@@ -7,6 +7,7 @@ type Status = "idle" | "sending" | "done" | "error" | "unconfigured";
 export function SubscribeForm() {
   const { t, lang } = usePrefs();
   const [status, setStatus] = useState<Status>("idle");
+  const [sent, setSent] = useState("");
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -22,6 +23,7 @@ export function SubscribeForm() {
       });
       if (res.status === 503) return setStatus("unconfigured");
       if (!res.ok) throw new Error(String(res.status));
+      setSent(String(data.get("email") ?? ""));
       form.reset();
       setStatus("done");
     } catch {
@@ -30,6 +32,22 @@ export function SubscribeForm() {
   }
 
   const s = t.subscribe;
+  // after signing up, the form is replaced by a clear confirmation
+  if (status === "done")
+    return (
+      <div className="pa-subscribe-done" role="status" aria-live="polite">
+        <span className="pa-subscribe-check" aria-hidden="true">
+          ✓
+        </span>
+        <div>
+          <strong>{s.done}</strong>
+          {sent && <small>{sent}</small>}
+          <button type="button" onClick={() => setStatus("idle")}>
+            {s.another}
+          </button>
+        </div>
+      </div>
+    );
   return (
     <form className="pa-subscribe-form" onSubmit={onSubmit}>
       <div className="pa-subscribe-fields">
@@ -46,8 +64,7 @@ export function SubscribeForm() {
       <button type="submit" disabled={status === "sending"}>
         {status === "sending" ? s.sending : s.button}
       </button>
-      <p className="pa-subscribe-note" role="status" aria-live="polite">
-        {status === "done" && s.done}
+      <p className={`pa-subscribe-note${status === "error" || status === "unconfigured" ? " is-error" : ""}`} role="status" aria-live="polite">
         {status === "error" && s.error}
         {status === "unconfigured" && s.unconfigured}
       </p>

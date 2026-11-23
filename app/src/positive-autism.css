@@ -512,3 +512,10 @@ html.pa-film-open { overflow: hidden; }
 @keyframes pa-film-pop { from { opacity: 0; transform: translateY(24px) scale(.96); } to { opacity: 1; transform: none; } }
 
 .pa-hero-media canvas { background-size: cover; background-position: center; }
+
+.pa-subscribe-note.is-error { padding: 10px 14px; border-radius: 10px; background: rgba(255, 120, 100, .16); color: #ffd9d2; }
+.pa-subscribe-done { display: flex; align-items: center; gap: 18px; padding: 22px 26px; border-radius: 16px; background: rgba(125, 255, 176, .12); border: 1.5px solid rgba(125, 255, 176, .4); color: var(--pa-white); animation: pa-film-pop .5s cubic-bezier(.2, .9, .2, 1) both; }
+.pa-subscribe-check { flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; background: #7dffb0; color: #06321b; font-size: 24px; font-weight: 700; }
+.pa-subscribe-done strong { display: block; font-size: 18px; line-height: 1.4; }
+.pa-subscribe-done small { display: block; margin-top: 2px; opacity: .8; }
+.pa-subscribe-done button { margin-top: 8px; padding: 0; border: 0; background: none; color: var(--pa-gold); font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
